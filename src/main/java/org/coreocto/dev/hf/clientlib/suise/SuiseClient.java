@@ -110,7 +110,7 @@ public class SuiseClient {
 //        Cipher aesCipher = this.getKey1EncryptCipher(suiseUtil.getBase64().decodeToByteArray(key1));
         try {
 //            result = suiseUtil.getBase64().encodeToString(aesCipher.doFinal(message.getBytes()));
-            byte[] data = suiseUtil.getAes128Cbc().encrypt(new byte[0], suiseUtil.getBase64().decodeToByteArray(key1), message.getBytes());
+            byte[] data = suiseUtil.getAes128Cbc().encrypt(DEFAULT_IV, suiseUtil.getBase64().decodeToByteArray(key1), message.getBytes());
             result = suiseUtil.getBase64().encodeToString(data);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -208,7 +208,7 @@ public class SuiseClient {
 
         try {
 //            result.setSearchToken(suiseUtil.getBase64().encodeToString(aesCipher.doFinal(keyword.getBytes("UTF-8"))));
-            byte[] data = suiseUtil.getAes128Cbc().encrypt(new byte[0], suiseUtil.getBase64().decodeToByteArray(key1), keyword.getBytes("UTF-8"));
+            byte[] data = suiseUtil.getAes128Cbc().encrypt(DEFAULT_IV, suiseUtil.getBase64().decodeToByteArray(key1), keyword.getBytes("UTF-8"));
             result.setSearchToken(suiseUtil.getBase64().encodeToString(data));
             searchHistory.add(keyword);
         } catch (Exception ex) {
