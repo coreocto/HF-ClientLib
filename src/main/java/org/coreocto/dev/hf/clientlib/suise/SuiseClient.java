@@ -27,7 +27,7 @@ public class SuiseClient {
     private ILogger logger = null;
 
     /* create and reuse cipher objects */
-    private Cipher key1EncryptCipher = null;    // for key1
+//    private Cipher key1EncryptCipher = null;    // for key1
     private Cipher key2EncryptCipher = null;    // for key2
     /* end create and reuse cipher objects */
 
@@ -43,12 +43,12 @@ public class SuiseClient {
         this.key2 = key2;
     }
 
-    private Cipher getKey1EncryptCipher(byte[] key) {
-        if (key1EncryptCipher == null) {
-            this.key1EncryptCipher = new CipherFactory().getCipher(DEFAULT_IV, key, IAes128Cbc.CIPHER, IAes128Cbc.CIPHER_TRANSFORMATION, Cipher.ENCRYPT_MODE);
-        }
-        return key1EncryptCipher;
-    }
+//    private Cipher getKey1EncryptCipher(byte[] key) {
+//        if (key1EncryptCipher == null) {
+//            this.key1EncryptCipher = new CipherFactory().getCipher(DEFAULT_IV, key, IAes128Cbc.CIPHER, IAes128Cbc.CIPHER_TRANSFORMATION, Cipher.ENCRYPT_MODE);
+//        }
+//        return key1EncryptCipher;
+//    }
 
     private Cipher getKey2EncryptCipher(byte[] key) {
         if (key2EncryptCipher == null) {
@@ -71,7 +71,7 @@ public class SuiseClient {
     }
 
     public void Enc(FileInputStream fis, OutputStream fos) {
-        Cipher aesCipher = getKey1EncryptCipher(suiseUtil.getBase64().decodeToByteArray(key2));
+        Cipher aesCipher = getKey2EncryptCipher(suiseUtil.getBase64().decodeToByteArray(key2));
         CipherOutputStream os = null;
         try {
             os = new CipherOutputStream(fos, aesCipher);
@@ -106,9 +106,12 @@ public class SuiseClient {
 
     private String encryptStr(String message) {
         String result = null;
-        Cipher aesCipher = this.getKey1EncryptCipher(suiseUtil.getBase64().decodeToByteArray(key1));
+
+//        Cipher aesCipher = this.getKey1EncryptCipher(suiseUtil.getBase64().decodeToByteArray(key1));
         try {
-            result = suiseUtil.getBase64().encodeToString(aesCipher.doFinal(message.getBytes()));
+//            result = suiseUtil.getBase64().encodeToString(aesCipher.doFinal(message.getBytes()));
+            byte[] data = suiseUtil.getAes128Cbc().encrypt(new byte[0], suiseUtil.getBase64().decodeToByteArray(key1), message.getBytes());
+            result = suiseUtil.getBase64().encodeToString(data);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -201,10 +204,12 @@ public class SuiseClient {
 
         SearchTokenResult result = new SearchTokenResult();
 
-        Cipher aesCipher = this.getKey1EncryptCipher(suiseUtil.getBase64().decodeToByteArray(key1));
+//        Cipher aesCipher = this.getKey1EncryptCipher(suiseUtil.getBase64().decodeToByteArray(key1));
 
         try {
-            result.setSearchToken(suiseUtil.getBase64().encodeToString(aesCipher.doFinal(keyword.getBytes("UTF-8"))));
+//            result.setSearchToken(suiseUtil.getBase64().encodeToString(aesCipher.doFinal(keyword.getBytes("UTF-8"))));
+            byte[] data = suiseUtil.getAes128Cbc().encrypt(new byte[0], suiseUtil.getBase64().decodeToByteArray(key1), keyword.getBytes("UTF-8"));
+            result.setSearchToken(suiseUtil.getBase64().encodeToString(data));
             searchHistory.add(keyword);
         } catch (Exception ex) {
             ex.printStackTrace();
