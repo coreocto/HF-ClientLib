@@ -1,11 +1,16 @@
 package org.coreocto.dev.hf.clientlib.suise;
 
+import org.coreocto.dev.hf.clientlib.Constants;
 import org.coreocto.dev.hf.commonlib.suise.bean.AddTokenResult;
 import org.coreocto.dev.hf.commonlib.suise.bean.SearchTokenResult;
 import org.coreocto.dev.hf.commonlib.suise.util.SuiseUtil;
-import org.coreocto.dev.hf.commonlib.util.*;
+import org.coreocto.dev.hf.commonlib.util.IAes128Cbc;
+import org.coreocto.dev.hf.commonlib.util.IBase64;
+import org.coreocto.dev.hf.commonlib.util.Registry;
+import org.coreocto.dev.hf.commonlib.util.Util;
 
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
@@ -18,11 +23,9 @@ import java.util.*;
 
 public class SuiseClient {
 
-    private static final String SPACE = " ";
-
     private static final String TAG = "SuiseClient";
     private static final byte[] DEFAULT_IV = new byte[IAes128Cbc.BLOCK_SIZE_IN_BYTE];
-    private static final String UTF8 = "UTF-8";
+
 //    private String key1 = null;
 //    private String key2 = null;
 
@@ -32,11 +35,11 @@ public class SuiseClient {
     private Set<String> searchHistory = null;   //contains a set of searched keyword (in plain text)
 
     private SuiseUtil suiseUtil = null;
-    private ILogger logger = null;
 
     /* create and reuse cipher objects */
 //    private Cipher key1EncryptCipher = null;    // for key1
     private Cipher key2EncryptCipher = null;    // for key2
+    private Cipher key2DecryptCipher = null;
     /* end create and reuse cipher objects */
 
     private Registry registry;
@@ -86,6 +89,48 @@ public class SuiseClient {
         this.key2 = suiseUtil.g(noOfBytes);
     }
 
+    public void Dec(FileInputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
+        if (key2DecryptCipher == null) {
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key2, IAes128Cbc.CIPHER);
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(DEFAULT_IV);
+
+            this.key2DecryptCipher = Cipher.getInstance(IAes128Cbc.CIPHER_TRANSFORMATION);
+            this.key2DecryptCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+        }
+
+        CipherInputStream is = null;
+
+        try {
+            is = new CipherInputStream(fis, key2DecryptCipher);
+            suiseUtil.copy(4096, is, fos);
+            fos.flush();
+
+        } catch (Exception e) {
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".Dec(FileInputStream,OutputStream)");
+        }
+
+        if (fos != null) {
+            try {
+                fos.close();
+            } catch (IOException e) {
+            }
+        }
+
+        if (is != null) {
+            try {
+                is.close();
+            } catch (IOException e) {
+            }
+        }
+
+        if (fis != null) {
+            try {
+                fis.close();
+            } catch (IOException e) {
+            }
+        }
+    }
+
     public void Enc(FileInputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
 
         if (key2EncryptCipher == null) {
@@ -102,12 +147,19 @@ public class SuiseClient {
             suiseUtil.copy(4096, fis, os);
             os.flush();
         } catch (Exception e) {
-            logger.log(TAG, "error when invoking " + TAG + ".Enc(FileInputStream,OutputStream)");
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".Enc(FileInputStream,OutputStream)");
         }
 
         if (os != null) {
             try {
                 os.close();
+            } catch (IOException e) {
+            }
+        }
+
+        if (fos != null) {
+            try {
+                fos.close();
             } catch (IOException e) {
             }
         }
@@ -124,7 +176,15 @@ public class SuiseClient {
         try {
             Enc(new FileInputStream(fi), new FileOutputStream(fo));
         } catch (IOException e) {
-            logger.log(TAG, "error when invoking " + TAG + ".Enc(File,File)");
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".Enc(File,File)");
+        }
+    }
+
+    public void Dec(File fi, File fo) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+        try {
+            Dec(new FileInputStream(fi), new FileOutputStream(fo));
+        } catch (IOException e) {
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".Dec(File,File)");
         }
     }
 
@@ -132,10 +192,10 @@ public class SuiseClient {
         String result = null;
 
         try {
-            byte[] data = registry.getAes128Cbc().encrypt(DEFAULT_IV, key1, message.getBytes(UTF8));
+            byte[] data = registry.getAes128Cbc().encrypt(DEFAULT_IV, key1, message.getBytes(Constants.UTF8));
             result = registry.getBase64().encodeToString(data);
         } catch (Exception ex) {
-            logger.log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
         }
         return result;
     }
@@ -155,12 +215,12 @@ public class SuiseClient {
             String tempStr = null;
             while ((tempStr = in.readLine()) != null) {
                 //for (String word : tempStr.split("\\s")) {
-                for (String word : tempStr.split(SPACE)) {
+                for (String word : tempStr.split(Constants.SPACE)) {
                     uniqueWordSet.add(word);
                 }
             }
         } catch (Exception e) {
-            logger.log(TAG, "error when invoking " + TAG + ".AddToken(File,boolean)");
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".AddToken(File,boolean)");
         }
 
         if (in != null) {
@@ -197,7 +257,7 @@ public class SuiseClient {
 
             byte[] encWord = null;
             try {
-                encWord = aes128Cbc.encrypt(DEFAULT_IV, key1, uniqueWordList.get(i).getBytes(UTF8));
+                encWord = aes128Cbc.encrypt(DEFAULT_IV, key1, uniqueWordList.get(i).getBytes(Constants.UTF8));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -241,11 +301,11 @@ public class SuiseClient {
 
         try {
 //            result.setSearchToken(suiseUtil.getBase64().encodeToString(aesCipher.doFinal(keyword.getBytes("UTF-8"))));
-            byte[] data = registry.getAes128Cbc().encrypt(DEFAULT_IV, key1, keyword.getBytes(UTF8));
+            byte[] data = registry.getAes128Cbc().encrypt(DEFAULT_IV, key1, keyword.getBytes(Constants.UTF8));
             result.setSearchToken(registry.getBase64().encodeToString(data));
             searchHistory.add(keyword);
         } catch (Exception ex) {
-            logger.log(TAG, "error when invoking " + TAG + ".SearchToken(File,boolean)");
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".SearchToken(File,boolean)");
         }
         return result;
     }
