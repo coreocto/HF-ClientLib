@@ -1,9 +1,9 @@
 package org.coreocto.dev.hf.clientlib.suise;
 
+import org.coreocto.dev.hf.commonlib.crypto.IBlockCipherCbc;
+import org.coreocto.dev.hf.commonlib.crypto.IHashFunc;
 import org.coreocto.dev.hf.commonlib.suise.util.SuiseUtil;
-import org.coreocto.dev.hf.commonlib.util.IAes128Cbc;
 import org.coreocto.dev.hf.commonlib.util.ILogger;
-import org.coreocto.dev.hf.commonlib.util.IMd5;
 import org.coreocto.dev.hf.commonlib.util.Registry;
 import org.junit.After;
 import org.junit.Before;
@@ -25,7 +25,7 @@ public class SuiseClientTest {
     @Test
     public void test() throws Exception {
         Registry registry = new Registry();
-        registry.setAes128Cbc(new IAes128Cbc() {
+        registry.setBlockCipherCbc(new IBlockCipherCbc() {
             @Override
             public byte[] encrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) {
                 return new byte[0];
@@ -36,7 +36,7 @@ public class SuiseClientTest {
                 return new byte[0];
             }
         });
-        registry.setMd5(new IMd5() {
+        registry.setHashFunc(new IHashFunc() {
             private MessageDigest md = null;
 
             {

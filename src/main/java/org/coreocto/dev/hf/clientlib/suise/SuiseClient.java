@@ -1,10 +1,11 @@
 package org.coreocto.dev.hf.clientlib.suise;
 
 import org.coreocto.dev.hf.clientlib.Constants;
+import org.coreocto.dev.hf.commonlib.crypto.BlockCipherFactory;
+import org.coreocto.dev.hf.commonlib.crypto.IBlockCipherCbc;
 import org.coreocto.dev.hf.commonlib.suise.bean.AddTokenResult;
 import org.coreocto.dev.hf.commonlib.suise.bean.SearchTokenResult;
 import org.coreocto.dev.hf.commonlib.suise.util.SuiseUtil;
-import org.coreocto.dev.hf.commonlib.util.IAes128Cbc;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 import org.coreocto.dev.hf.commonlib.util.Registry;
 import org.coreocto.dev.hf.commonlib.util.Util;
@@ -13,8 +14,6 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -24,7 +23,9 @@ import java.util.*;
 public class SuiseClient {
 
     private static final String TAG = "SuiseClient";
-    private static final byte[] DEFAULT_IV = new byte[IAes128Cbc.BLOCK_SIZE_IN_BYTE];
+    public static final int BLOCK_SIZE_IN_BYTE = 16;
+    private static final byte[] DEFAULT_IV = new byte[BLOCK_SIZE_IN_BYTE];
+
 
 //    private String key1 = null;
 //    private String key2 = null;
@@ -91,11 +92,11 @@ public class SuiseClient {
 
     public void Dec(FileInputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
         if (key2DecryptCipher == null) {
-            SecretKeySpec secretKeySpec = new SecretKeySpec(key2, IAes128Cbc.CIPHER);
-            IvParameterSpec ivParameterSpec = new IvParameterSpec(DEFAULT_IV);
-
-            this.key2DecryptCipher = Cipher.getInstance(IAes128Cbc.CIPHER_TRANSFORMATION);
-            this.key2DecryptCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+            this.key2DecryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
+                    BlockCipherFactory.CIPHER_AES + BlockCipherFactory.SEP + BlockCipherFactory.MODE_CBC + BlockCipherFactory.SEP + BlockCipherFactory.PADDING_PKCS5,
+                    Cipher.DECRYPT_MODE,
+                    key2,
+                    DEFAULT_IV);
         }
 
         CipherInputStream is = null;
@@ -134,11 +135,11 @@ public class SuiseClient {
     public void Enc(FileInputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
 
         if (key2EncryptCipher == null) {
-            SecretKeySpec secretKeySpec = new SecretKeySpec(key2, IAes128Cbc.CIPHER);
-            IvParameterSpec ivParameterSpec = new IvParameterSpec(DEFAULT_IV);
-
-            this.key2EncryptCipher = Cipher.getInstance(IAes128Cbc.CIPHER_TRANSFORMATION);
-            this.key2EncryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+            this.key2EncryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
+                    BlockCipherFactory.CIPHER_AES + BlockCipherFactory.SEP + BlockCipherFactory.MODE_CBC + BlockCipherFactory.SEP + BlockCipherFactory.PADDING_PKCS5,
+                    Cipher.ENCRYPT_MODE,
+                    key2,
+                    DEFAULT_IV);
         }
 
         CipherOutputStream os = null;
@@ -192,7 +193,7 @@ public class SuiseClient {
         String result = null;
 
         try {
-            byte[] data = registry.getAes128Cbc().encrypt(DEFAULT_IV, key1, message.getBytes(Constants.UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, key1, message.getBytes(Constants.UTF8));
             result = registry.getBase64().encodeToString(data);
         } catch (Exception ex) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
@@ -246,10 +247,10 @@ public class SuiseClient {
 
         int uniqueWordCnt = uniqueWordList.size();
 
-        byte[] randomBytes = new byte[IAes128Cbc.BLOCK_SIZE_IN_BYTE];
+        byte[] randomBytes = new byte[BLOCK_SIZE_IN_BYTE];
 
         IBase64 base64 = registry.getBase64();
-        IAes128Cbc aes128Cbc = registry.getAes128Cbc();
+        IBlockCipherCbc aes128Cbc = registry.getBlockCipherCbc();
 
         for (int i = 0; i < uniqueWordCnt; i++) {
 
@@ -301,7 +302,7 @@ public class SuiseClient {
 
         try {
 //            result.setSearchToken(suiseUtil.getBase64().encodeToString(aesCipher.doFinal(keyword.getBytes("UTF-8"))));
-            byte[] data = registry.getAes128Cbc().encrypt(DEFAULT_IV, key1, keyword.getBytes(Constants.UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, key1, keyword.getBytes(Constants.UTF8));
             result.setSearchToken(registry.getBase64().encodeToString(data));
             searchHistory.add(keyword);
         } catch (Exception ex) {
