@@ -184,10 +184,34 @@ public class VasstClient {
         }
     }
 
-    public void CreateReq(String query, int x) {
-        List<String> splittedQuery = Arrays.asList(query.split(Constants.SPACE));
+    public List<String> CreateReq(String query, byte x) {
 
+        List<String> result = new ArrayList<>();
+        if (query==null || query.isEmpty()){
+            return result;
+        }
 
+        List<String> keywords = Arrays.asList(query.split(Constants.SPACE));
+
+        //filter stop words
+        removeStopWords(keywords);
+
+        //do stemming with PorterStemmer
+        doStemming(keywords);
+
+        Set<String> uniqueKeywords = new HashSet<>();
+        uniqueKeywords.addAll(keywords);
+
+        for (String uniqueKeyword:uniqueKeywords){
+            String firstRd = encryptStrByCharPos(uniqueKeyword, x);
+            String secondRd = encryptStr(firstRd);
+            result.add(secondRd);
+        }
+
+        keywords.clear();
+        uniqueKeywords.clear();
+
+        return result;
     }
 
     public void Encrypt(File fi, File fo) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
