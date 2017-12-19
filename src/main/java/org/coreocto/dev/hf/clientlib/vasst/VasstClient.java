@@ -60,7 +60,8 @@ public class VasstClient {
                 wordList.addAll(Arrays.asList(tempStr.split(org.coreocto.dev.hf.clientlib.Constants.SPACE)));
             }
         } catch (Exception e) {
-            registry.getLogger().log(TAG, "error when invoking " + TAG + ".AddToken(File,boolean)");
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".Preprocessing(File,byte)");
+            e.printStackTrace();
         }
 
         if (in != null) {
@@ -144,7 +145,8 @@ public class VasstClient {
 
         // load stop words
         try {
-            in = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("eng-stopwords.txt")));
+            InputStream is = this.getClass().getResourceAsStream("eng-stopwords.txt");
+            in = new BufferedReader(new InputStreamReader(is));
             String tempStr = null;
 
             while ((tempStr = in.readLine()) != null) {
@@ -153,7 +155,7 @@ public class VasstClient {
             }
 
         } catch (Exception e) {
-            registry.getLogger().log(TAG, "error when invoking " + TAG + ".AddToken(File,boolean)");
+            registry.getLogger().log(TAG, "error when invoking " + TAG + ".removeStopWords(List<String>)");
         }
         // end load stop words
 
