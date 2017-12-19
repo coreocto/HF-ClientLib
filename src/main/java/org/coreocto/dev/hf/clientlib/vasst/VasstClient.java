@@ -92,9 +92,6 @@ public class VasstClient {
         for (Iterator<Map.Entry<String, Integer>> it = terms.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<String, Integer> entry = it.next();
             String key = entry.getKey();
-            Integer value = entry.getValue();
-            registry.getLogger().log(TAG, "key = " + key);
-            registry.getLogger().log(TAG, "value = " + entry.getValue());
             if (key == null) {
                 continue;
             }
