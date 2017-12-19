@@ -208,7 +208,9 @@ public class VasstClient {
             result.add(secondRd);
         }
 
-        keywords.clear();
+        //this list is returned by Arrays.asList(...), it would throw a UnsupportedOperationException if remove() or clear() is invoked
+        //keywords.clear();
+
         uniqueKeywords.clear();
 
         return result;
