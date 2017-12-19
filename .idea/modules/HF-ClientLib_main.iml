@@ -9,6 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Gradle: com.github.coreocto:HF-CommonLib:24b0ff6bd3" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.coreocto:HF-CommonLib:36cdf243ab" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.caarmen:porter-stemmer:release-1.0.0" level="project" />
   </component>
 </module>

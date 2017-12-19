@@ -15,6 +15,8 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
+import java.lang.reflect.Array;
+import java.nio.Buffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -22,10 +24,9 @@ import java.util.*;
 
 public class SuiseClient {
 
-    private static final String TAG = "SuiseClient";
     public static final int BLOCK_SIZE_IN_BYTE = 16;
+    private static final String TAG = "SuiseClient";
     private static final byte[] DEFAULT_IV = new byte[BLOCK_SIZE_IN_BYTE];
-
 
 //    private String key1 = null;
 //    private String key2 = null;
@@ -38,7 +39,7 @@ public class SuiseClient {
     private SuiseUtil suiseUtil = null;
 
     /* create and reuse cipher objects */
-//    private Cipher key1EncryptCipher = null;    // for key1
+    //private Cipher key1EncryptCipher = null;    // for key1
     private Cipher key2EncryptCipher = null;    // for key2
     private Cipher key2DecryptCipher = null;
     /* end create and reuse cipher objects */
@@ -99,22 +100,18 @@ public class SuiseClient {
                     DEFAULT_IV);
         }
 
-        CipherInputStream is = null;
-
+        BufferedInputStream is = null;
+        BufferedOutputStream os = null;
         try {
-            is = new CipherInputStream(fis, key2DecryptCipher);
-            suiseUtil.copy(4096, is, fos);
-            fos.flush();
-
+            is = new BufferedInputStream(new CipherInputStream(fis, key2DecryptCipher));
+            os = new BufferedOutputStream(fos);
+            int buffer = -1;
+            while ((buffer = is.read()) != -1) {
+                os.write(buffer);
+            }
+            os.flush();
         } catch (Exception e) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".Dec(FileInputStream,OutputStream)");
-        }
-
-        if (fos != null) {
-            try {
-                fos.close();
-            } catch (IOException e) {
-            }
         }
 
         if (is != null) {
@@ -124,9 +121,9 @@ public class SuiseClient {
             }
         }
 
-        if (fis != null) {
+        if (os != null) {
             try {
-                fis.close();
+                os.close();
             } catch (IOException e) {
             }
         }
@@ -142,10 +139,15 @@ public class SuiseClient {
                     DEFAULT_IV);
         }
 
-        CipherOutputStream os = null;
+        BufferedOutputStream os = null;
+        BufferedInputStream is = null;
         try {
-            os = new CipherOutputStream(fos, key2EncryptCipher);
-            suiseUtil.copy(4096, fis, os);
+            is = new BufferedInputStream(fis);
+            os = new BufferedOutputStream(new CipherOutputStream(fos, key2EncryptCipher));
+            int buffer = -1;
+            while ((buffer = is.read()) != -1) {
+                os.write(buffer);
+            }
             os.flush();
         } catch (Exception e) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".Enc(FileInputStream,OutputStream)");
@@ -158,16 +160,9 @@ public class SuiseClient {
             }
         }
 
-        if (fos != null) {
+        if (is != null) {
             try {
-                fos.close();
-            } catch (IOException e) {
-            }
-        }
-
-        if (fis != null) {
-            try {
-                fis.close();
+                is.close();
             } catch (IOException e) {
             }
         }
@@ -201,7 +196,7 @@ public class SuiseClient {
         return result;
     }
 
-    public AddTokenResult AddToken(File inFile, boolean includeSubStr) {
+    public AddTokenResult AddToken(File inFile, boolean includeSubStr, String docId) {
 
         AddTokenResult result = new AddTokenResult();
 
@@ -212,13 +207,11 @@ public class SuiseClient {
         BufferedReader in = null;
 
         try {
-            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), "UTF-8"));
+            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.UTF8));
             String tempStr = null;
             while ((tempStr = in.readLine()) != null) {
-                //for (String word : tempStr.split("\\s")) {
-                for (String word : tempStr.split(Constants.SPACE)) {
-                    uniqueWordSet.add(word);
-                }
+                tempStr = tempStr.toLowerCase();
+                uniqueWordSet.addAll(Arrays.asList(tempStr.split(Constants.SPACE)));
             }
         } catch (Exception e) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".AddToken(File,boolean)");
@@ -283,9 +276,9 @@ public class SuiseClient {
         });
         */
 
-        String fileName = inFile.getAbsolutePath();
+        //String fileName = inFile.getAbsolutePath();
 
-        String docId = base64.encodeToString(aes128Cbc.encrypt(DEFAULT_IV, key1, fileName.getBytes()));
+        //String docId = base64.encodeToString(aes128Cbc.encrypt(DEFAULT_IV, key1, fileName.getBytes()));
 
         result.setId(docId);
         result.setC(c);
