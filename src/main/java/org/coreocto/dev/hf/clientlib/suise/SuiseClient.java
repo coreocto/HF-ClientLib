@@ -1,6 +1,7 @@
 package org.coreocto.dev.hf.clientlib.suise;
 
 import org.coreocto.dev.hf.clientlib.Constants;
+import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.BlockCipherFactory;
 import org.coreocto.dev.hf.commonlib.crypto.IBlockCipherCbc;
 import org.coreocto.dev.hf.commonlib.suise.bean.AddTokenResult;
@@ -196,7 +197,7 @@ public class SuiseClient {
         return result;
     }
 
-    public AddTokenResult AddToken(File inFile, boolean includeSubStr, String docId) {
+    public AddTokenResult AddToken(File inFile, boolean includeSubStr, String docId, IFileParser fileParser) {
 
         AddTokenResult result = new AddTokenResult();
 
@@ -204,25 +205,27 @@ public class SuiseClient {
         List<String> x = new ArrayList<>();
         List<String> c = new ArrayList<>();
 
-        BufferedReader in = null;
+        uniqueWordSet.addAll(fileParser.getText(inFile));
 
-        try {
-            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.UTF8));
-            String tempStr = null;
-            while ((tempStr = in.readLine()) != null) {
-                tempStr = tempStr.toLowerCase();
-                uniqueWordSet.addAll(Arrays.asList(tempStr.split(Constants.SPACE)));
-            }
-        } catch (Exception e) {
-            registry.getLogger().log(TAG, "error when invoking " + TAG + ".AddToken(File,boolean)");
-        }
-
-        if (in != null) {
-            try {
-                in.close();
-            } catch (IOException e) {
-            }
-        }
+//        BufferedReader in = null;
+//
+//        try {
+//            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.UTF8));
+//            String tempStr = null;
+//            while ((tempStr = in.readLine()) != null) {
+//                tempStr = tempStr.toLowerCase();
+//                uniqueWordSet.addAll(Arrays.asList(tempStr.split(Constants.SPACE)));
+//            }
+//        } catch (Exception e) {
+//            registry.getLogger().log(TAG, "error when invoking " + TAG + ".AddToken(File,boolean)");
+//        }
+//
+//        if (in != null) {
+//            try {
+//                in.close();
+//            } catch (IOException e) {
+//            }
+//        }
 
         List<String> uniqueWordList = new ArrayList<>(uniqueWordSet);
 

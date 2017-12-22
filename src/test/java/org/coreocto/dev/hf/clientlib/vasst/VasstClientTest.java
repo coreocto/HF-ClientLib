@@ -1,5 +1,6 @@
 package org.coreocto.dev.hf.clientlib.vasst;
 
+import org.coreocto.dev.hf.clientlib.parser.TxtFileParserImpl;
 import org.coreocto.dev.hf.commonlib.crypto.IBlockCipherCbc;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 import org.coreocto.dev.hf.commonlib.util.ILogger;
@@ -95,6 +96,6 @@ public class VasstClientTest {
         String docId = "someDocId";
         byte x = (byte) (Math.random() * (128));
         vasstClient.GenKey(16);
-        vasstClient.Preprocessing(new File("C:\\Users\\John\\Desktop\\20_newsgroups\\alt.atheism\\53519"), x);
+        vasstClient.Preprocessing(new File("C:\\Users\\John\\Desktop\\20_newsgroups\\alt.atheism\\53519"), x, new TxtFileParserImpl());
     }
 }

@@ -2,6 +2,7 @@ package org.coreocto.dev.hf.clientlib.vasst;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import org.coreocto.dev.hf.clientlib.Constants;
+import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.BlockCipherFactory;
 import org.coreocto.dev.hf.commonlib.util.Registry;
 import org.coreocto.dev.hf.commonlib.vasst.bean.TermFreq;
@@ -47,30 +48,32 @@ public class VasstClient {
     }
 
     //Preprocessing(files,sk,x)
-    public TermFreq Preprocessing(File inFile, byte x) {
+    public TermFreq Preprocessing(File inFile, byte x, IFileParser fileParser) {
         BufferedReader in = null;
 
-        List<String> wordList = new ArrayList<>();
+        //List<String> wordList = new ArrayList<>();
 
-        try {
-            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.UTF8));
-            String tempStr = null;
-            while ((tempStr = in.readLine()) != null) {
-                tempStr = tempStr.toLowerCase();
-                wordList.addAll(Arrays.asList(tempStr.split(org.coreocto.dev.hf.clientlib.Constants.SPACE)));
-            }
-        } catch (Exception e) {
-            registry.getLogger().log(TAG, "error when invoking " + TAG + ".Preprocessing(File,byte)");
-            e.printStackTrace();
-        }
+        List<String> wordList = fileParser.getText(inFile);
 
-        if (in != null) {
-            try {
-                in.close();
-            } catch (IOException iox) {
-
-            }
-        }
+//        try {
+//            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.UTF8));
+//            String tempStr = null;
+//            while ((tempStr = in.readLine()) != null) {
+//                tempStr = tempStr.toLowerCase();
+//                wordList.addAll(Arrays.asList(tempStr.split(org.coreocto.dev.hf.clientlib.Constants.SPACE)));
+//            }
+//        } catch (Exception e) {
+//            registry.getLogger().log(TAG, "error when invoking " + TAG + ".Preprocessing(File,byte)");
+//            e.printStackTrace();
+//        }
+//
+//        if (in != null) {
+//            try {
+//                in.close();
+//            } catch (IOException iox) {
+//
+//            }
+//        }
 
         //filter stop words
         removeStopWords(wordList);
