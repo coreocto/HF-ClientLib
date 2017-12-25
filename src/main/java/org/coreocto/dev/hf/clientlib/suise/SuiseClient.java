@@ -16,8 +16,6 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
-import java.lang.reflect.Array;
-import java.nio.Buffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -92,7 +90,7 @@ public class SuiseClient {
         this.key2 = suiseUtil.g(noOfBytes);
     }
 
-    public void Dec(FileInputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
+    public void Dec(InputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
         if (key2DecryptCipher == null) {
             this.key2DecryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
                     BlockCipherFactory.CIPHER_AES + BlockCipherFactory.SEP + BlockCipherFactory.MODE_CBC + BlockCipherFactory.SEP + BlockCipherFactory.PADDING_PKCS5,
@@ -130,7 +128,7 @@ public class SuiseClient {
         }
     }
 
-    public void Enc(FileInputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
+    public void Enc(InputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
 
         if (key2EncryptCipher == null) {
             this.key2EncryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
@@ -189,7 +187,7 @@ public class SuiseClient {
         String result = null;
 
         try {
-            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, key1, message.getBytes(Constants.UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, key1, message.getBytes(Constants.ENCODING_UTF8));
             result = registry.getBase64().encodeToString(data);
         } catch (Exception ex) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
@@ -210,7 +208,7 @@ public class SuiseClient {
 //        BufferedReader in = null;
 //
 //        try {
-//            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.UTF8));
+//            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.ENCODING_UTF8));
 //            String tempStr = null;
 //            while ((tempStr = in.readLine()) != null) {
 //                tempStr = tempStr.toLowerCase();
@@ -254,7 +252,7 @@ public class SuiseClient {
 
             byte[] encWord = null;
             try {
-                encWord = aes128Cbc.encrypt(DEFAULT_IV, key1, uniqueWordList.get(i).getBytes(Constants.UTF8));
+                encWord = aes128Cbc.encrypt(DEFAULT_IV, key1, uniqueWordList.get(i).getBytes(Constants.ENCODING_UTF8));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -298,7 +296,7 @@ public class SuiseClient {
 
         try {
 //            result.setSearchToken(suiseUtil.getBase64().encodeToString(aesCipher.doFinal(keyword.getBytes("UTF-8"))));
-            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, key1, keyword.getBytes(Constants.UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, key1, keyword.getBytes(Constants.ENCODING_UTF8));
             result.setSearchToken(registry.getBase64().encodeToString(data));
             searchHistory.add(keyword);
         } catch (Exception ex) {

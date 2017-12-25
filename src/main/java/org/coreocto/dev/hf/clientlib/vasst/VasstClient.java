@@ -56,7 +56,7 @@ public class VasstClient {
         List<String> wordList = fileParser.getText(inFile);
 
 //        try {
-//            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.UTF8));
+//            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.ENCODING_UTF8));
 //            String tempStr = null;
 //            while ((tempStr = in.readLine()) != null) {
 //                tempStr = tempStr.toLowerCase();
@@ -128,7 +128,7 @@ public class VasstClient {
         String result = null;
 
         try {
-            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, secretKey, message.getBytes(Constants.UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, secretKey, message.getBytes(Constants.ENCODING_UTF8));
             result = registry.getBase64().encodeToString(data);
         } catch (Exception ex) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
@@ -235,7 +235,7 @@ public class VasstClient {
         }
     }
 
-    public void Encrypt(FileInputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
+    public void Encrypt(InputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
 
         if (key2EncryptCipher == null) {
             this.key2EncryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
@@ -275,7 +275,7 @@ public class VasstClient {
         }
     }
 
-    public void Decrypt(FileInputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
+    public void Decrypt(InputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
         if (key2DecryptCipher == null) {
             this.key2DecryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
                     BlockCipherFactory.CIPHER_AES + BlockCipherFactory.SEP + BlockCipherFactory.MODE_CBC + BlockCipherFactory.SEP + BlockCipherFactory.PADDING_PKCS5,

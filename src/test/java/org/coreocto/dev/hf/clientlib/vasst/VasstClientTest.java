@@ -1,6 +1,7 @@
 package org.coreocto.dev.hf.clientlib.vasst;
 
 import org.coreocto.dev.hf.clientlib.parser.TxtFileParserImpl;
+import org.coreocto.dev.hf.clientlib.parser.TxtFileParserImplTest;
 import org.coreocto.dev.hf.commonlib.crypto.IBlockCipherCbc;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 import org.coreocto.dev.hf.commonlib.util.ILogger;
