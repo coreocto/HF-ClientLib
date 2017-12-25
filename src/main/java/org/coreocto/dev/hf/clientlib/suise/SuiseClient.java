@@ -23,23 +23,17 @@ import java.util.*;
 
 public class SuiseClient {
 
-    public static final int BLOCK_SIZE_IN_BYTE = 16;
     private static final String TAG = "SuiseClient";
-    private static final byte[] DEFAULT_IV = new byte[BLOCK_SIZE_IN_BYTE];
-
-//    private String key1 = null;
-//    private String key2 = null;
 
     private byte[] key1 = null;
     private byte[] key2 = null;
-
+    private byte[] iv1 = null;
+    private byte[] iv2 = null;
     private Set<String> searchHistory = null;   //contains a set of searched keyword (in plain text)
-
     private SuiseUtil suiseUtil = null;
 
     /* create and reuse cipher objects */
-    //private Cipher key1EncryptCipher = null;    // for key1
-    private Cipher key2EncryptCipher = null;    // for key2
+    private Cipher key2EncryptCipher = null;
     private Cipher key2DecryptCipher = null;
     /* end create and reuse cipher objects */
 
@@ -51,31 +45,29 @@ public class SuiseClient {
         this.searchHistory = new HashSet<>();
     }
 
-//    public SuiseClient(Registry registry, SuiseUtil suiseUtil, String key1, String key2) {
-//        this(registry, suiseUtil);
-//        this.key1 = registry.getBase64().decodeToByteArray(key1);
-//        this.key2 = registry.getBase64().decodeToByteArray(key2);
-//    }
-
-    public SuiseClient(Registry registry, SuiseUtil suiseUtil, byte[] key1, byte[] key2) {
+    public SuiseClient(Registry registry, SuiseUtil suiseUtil, byte[] key1, byte[] key2, byte[] iv1, byte[] iv2) {
         this(registry, suiseUtil);
         this.key1 = key1;
         this.key2 = key2;
+        this.iv1 = iv1;
+        this.iv2 = iv2;
     }
 
-//    private Cipher getKey1EncryptCipher(byte[] key) {
-//        if (key1EncryptCipher == null) {
-//            this.key1EncryptCipher = new CipherFactory().getCipher(DEFAULT_IV, key, IAes128Cbc.CIPHER, IAes128Cbc.CIPHER_TRANSFORMATION, Cipher.ENCRYPT_MODE);
-//        }
-//        return key1EncryptCipher;
-//    }
+    public byte[] getIv1() {
+        return iv1;
+    }
 
-//    private Cipher getKey2EncryptCipher(byte[] key) {
-//        if (key2EncryptCipher == null) {
-//            this.key2EncryptCipher = new CipherFactory().getCipher(DEFAULT_IV, key, IAes128Cbc.CIPHER, IAes128Cbc.CIPHER_TRANSFORMATION, Cipher.ENCRYPT_MODE);
-//        }
-//        return key2EncryptCipher;
-//    }
+    public void setIv1(byte[] iv1) {
+        this.iv1 = iv1;
+    }
+
+    public byte[] getIv2() {
+        return iv2;
+    }
+
+    public void setIv2(byte[] iv2) {
+        this.iv2 = iv2;
+    }
 
     public byte[] getKey1() {
         return key1;
@@ -96,7 +88,7 @@ public class SuiseClient {
                     BlockCipherFactory.CIPHER_AES + BlockCipherFactory.SEP + BlockCipherFactory.MODE_CBC + BlockCipherFactory.SEP + BlockCipherFactory.PADDING_PKCS5,
                     Cipher.DECRYPT_MODE,
                     key2,
-                    DEFAULT_IV);
+                    iv2);
         }
 
         BufferedInputStream is = null;
@@ -135,7 +127,7 @@ public class SuiseClient {
                     BlockCipherFactory.CIPHER_AES + BlockCipherFactory.SEP + BlockCipherFactory.MODE_CBC + BlockCipherFactory.SEP + BlockCipherFactory.PADDING_PKCS5,
                     Cipher.ENCRYPT_MODE,
                     key2,
-                    DEFAULT_IV);
+                    iv2);
         }
 
         BufferedOutputStream os = null;
@@ -187,7 +179,7 @@ public class SuiseClient {
         String result = null;
 
         try {
-            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, key1, message.getBytes(Constants.ENCODING_UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(iv1, key1, message.getBytes(Constants.ENCODING_UTF8));
             result = registry.getBase64().encodeToString(data);
         } catch (Exception ex) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
@@ -195,35 +187,14 @@ public class SuiseClient {
         return result;
     }
 
-    public AddTokenResult AddToken(File inFile, boolean includeSubStr, String docId, IFileParser fileParser) {
-
+    public AddTokenResult AddToken(InputStream inputStream, boolean includeSubStr, String docId, IFileParser fileParser) {
         AddTokenResult result = new AddTokenResult();
 
         Set<String> uniqueWordSet = new HashSet<>();
         List<String> x = new ArrayList<>();
         List<String> c = new ArrayList<>();
 
-        uniqueWordSet.addAll(fileParser.getText(inFile));
-
-//        BufferedReader in = null;
-//
-//        try {
-//            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.ENCODING_UTF8));
-//            String tempStr = null;
-//            while ((tempStr = in.readLine()) != null) {
-//                tempStr = tempStr.toLowerCase();
-//                uniqueWordSet.addAll(Arrays.asList(tempStr.split(Constants.SPACE)));
-//            }
-//        } catch (Exception e) {
-//            registry.getLogger().log(TAG, "error when invoking " + TAG + ".AddToken(File,boolean)");
-//        }
-//
-//        if (in != null) {
-//            try {
-//                in.close();
-//            } catch (IOException e) {
-//            }
-//        }
+        uniqueWordSet.addAll(fileParser.getText(inputStream));
 
         List<String> uniqueWordList = new ArrayList<>(uniqueWordSet);
 
@@ -241,7 +212,7 @@ public class SuiseClient {
 
         int uniqueWordCnt = uniqueWordList.size();
 
-        byte[] randomBytes = new byte[BLOCK_SIZE_IN_BYTE];
+        byte[] randomBytes = new byte[16];
 
         IBase64 base64 = registry.getBase64();
         IBlockCipherCbc aes128Cbc = registry.getBlockCipherCbc();
@@ -252,7 +223,7 @@ public class SuiseClient {
 
             byte[] encWord = null;
             try {
-                encWord = aes128Cbc.encrypt(DEFAULT_IV, key1, uniqueWordList.get(i).getBytes(Constants.ENCODING_UTF8));
+                encWord = aes128Cbc.encrypt(iv1, key1, uniqueWordList.get(i).getBytes(Constants.ENCODING_UTF8));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -277,13 +248,21 @@ public class SuiseClient {
         });
         */
 
-        //String fileName = inFile.getAbsolutePath();
-
-        //String docId = base64.encodeToString(aes128Cbc.encrypt(DEFAULT_IV, key1, fileName.getBytes()));
-
         result.setId(docId);
         result.setC(c);
         result.setX(x);
+
+        return result;
+    }
+
+    public AddTokenResult AddToken(File inFile, boolean includeSubStr, String docId, IFileParser fileParser) {
+        AddTokenResult result = null;
+
+        try {
+            result = this.AddToken(new BufferedInputStream(new FileInputStream(inFile)), includeSubStr, docId, fileParser);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
         return result;
     }
@@ -292,11 +271,8 @@ public class SuiseClient {
 
         SearchTokenResult result = new SearchTokenResult();
 
-//        Cipher aesCipher = this.getKey1EncryptCipher(suiseUtil.getBase64().decodeToByteArray(key1));
-
         try {
-//            result.setSearchToken(suiseUtil.getBase64().encodeToString(aesCipher.doFinal(keyword.getBytes("UTF-8"))));
-            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, key1, keyword.getBytes(Constants.ENCODING_UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(iv1, key1, keyword.getBytes(Constants.ENCODING_UTF8));
             result.setSearchToken(registry.getBase64().encodeToString(data));
             searchHistory.add(keyword);
         } catch (Exception ex) {

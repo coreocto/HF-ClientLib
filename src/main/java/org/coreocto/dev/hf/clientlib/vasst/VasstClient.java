@@ -20,16 +20,23 @@ import java.util.*;
 
 public class VasstClient {
 
-    public static final int BLOCK_SIZE_IN_BYTE = 16;
     private static final String TAG = "VasstClient";
-    private static final byte[] DEFAULT_IV = new byte[BLOCK_SIZE_IN_BYTE];
     private Registry registry;
     private byte[] secretKey = null;
-    private Cipher key2EncryptCipher = null;
-    private Cipher key2DecryptCipher = null;
+    private byte[] iv = null;
+    private Cipher keyEncryptCipher = null;
+    private Cipher keyDecryptCipher = null;
 
     public VasstClient(Registry registry) {
         this.registry = registry;
+    }
+
+    public byte[] getIv() {
+        return iv;
+    }
+
+    public void setIv(byte[] iv) {
+        this.iv = iv;
     }
 
     public byte[] getSecretKey() {
@@ -47,33 +54,8 @@ public class VasstClient {
         this.secretKey = randomBytes;
     }
 
-    //Preprocessing(files,sk,x)
-    public TermFreq Preprocessing(File inFile, byte x, IFileParser fileParser) {
-        BufferedReader in = null;
-
-        //List<String> wordList = new ArrayList<>();
-
-        List<String> wordList = fileParser.getText(inFile);
-
-//        try {
-//            in = new BufferedReader(new InputStreamReader(new FileInputStream(inFile), Constants.ENCODING_UTF8));
-//            String tempStr = null;
-//            while ((tempStr = in.readLine()) != null) {
-//                tempStr = tempStr.toLowerCase();
-//                wordList.addAll(Arrays.asList(tempStr.split(org.coreocto.dev.hf.clientlib.Constants.SPACE)));
-//            }
-//        } catch (Exception e) {
-//            registry.getLogger().log(TAG, "error when invoking " + TAG + ".Preprocessing(File,byte)");
-//            e.printStackTrace();
-//        }
-//
-//        if (in != null) {
-//            try {
-//                in.close();
-//            } catch (IOException iox) {
-//
-//            }
-//        }
+    public TermFreq Preprocessing(InputStream inputStream, byte x, IFileParser fileParser) {
+        List<String> wordList = fileParser.getText(new BufferedInputStream(inputStream));
 
         //filter stop words
         removeStopWords(wordList);
@@ -109,6 +91,17 @@ public class VasstClient {
         return termFreq;
     }
 
+    //Preprocessing(files,sk,x)
+    public TermFreq Preprocessing(File inFile, byte x, IFileParser fileParser) {
+        TermFreq result = null;
+        try {
+            result = this.Preprocessing(new FileInputStream(inFile), x, fileParser);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     private String encryptStrByCharPos(String message, byte x) {
         if (message == null || message.isEmpty()) {
             return message;
@@ -128,7 +121,7 @@ public class VasstClient {
         String result = null;
 
         try {
-            byte[] data = registry.getBlockCipherCbc().encrypt(DEFAULT_IV, secretKey, message.getBytes(Constants.ENCODING_UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(iv, secretKey, message.getBytes(Constants.ENCODING_UTF8));
             result = registry.getBase64().encodeToString(data);
         } catch (Exception ex) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
@@ -190,7 +183,7 @@ public class VasstClient {
     public List<String> CreateReq(String query, byte x) {
 
         List<String> result = new ArrayList<>();
-        if (query==null || query.isEmpty()){
+        if (query == null || query.isEmpty()) {
             return result;
         }
 
@@ -205,7 +198,7 @@ public class VasstClient {
         Set<String> uniqueKeywords = new HashSet<>();
         uniqueKeywords.addAll(keywords);
 
-        for (String uniqueKeyword:uniqueKeywords){
+        for (String uniqueKeyword : uniqueKeywords) {
             String firstRd = encryptStrByCharPos(uniqueKeyword, x);
             String secondRd = encryptStr(firstRd);
             result.add(secondRd);
@@ -237,12 +230,12 @@ public class VasstClient {
 
     public void Encrypt(InputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
 
-        if (key2EncryptCipher == null) {
-            this.key2EncryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
+        if (keyEncryptCipher == null) {
+            this.keyEncryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
                     BlockCipherFactory.CIPHER_AES + BlockCipherFactory.SEP + BlockCipherFactory.MODE_CBC + BlockCipherFactory.SEP + BlockCipherFactory.PADDING_PKCS5,
                     Cipher.ENCRYPT_MODE,
                     secretKey,
-                    DEFAULT_IV);
+                    iv);
         }
 
         BufferedInputStream is = null;
@@ -250,7 +243,7 @@ public class VasstClient {
 
         try {
             is = new BufferedInputStream(fis);
-            os = new BufferedOutputStream(new CipherOutputStream(fos, key2EncryptCipher));
+            os = new BufferedOutputStream(new CipherOutputStream(fos, keyEncryptCipher));
             int data = -1;
             while ((data = is.read()) != -1) {
                 os.write(data);
@@ -276,19 +269,19 @@ public class VasstClient {
     }
 
     public void Decrypt(InputStream fis, OutputStream fos) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
-        if (key2DecryptCipher == null) {
-            this.key2DecryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
+        if (keyDecryptCipher == null) {
+            this.keyDecryptCipher = BlockCipherFactory.getCipher(BlockCipherFactory.CIPHER_AES,
                     BlockCipherFactory.CIPHER_AES + BlockCipherFactory.SEP + BlockCipherFactory.MODE_CBC + BlockCipherFactory.SEP + BlockCipherFactory.PADDING_PKCS5,
                     Cipher.DECRYPT_MODE,
                     secretKey,
-                    DEFAULT_IV);
+                    iv);
         }
 
         BufferedInputStream is = null;
         BufferedOutputStream os = null;
 
         try {
-            is = new BufferedInputStream(new CipherInputStream(fis, key2DecryptCipher));
+            is = new BufferedInputStream(new CipherInputStream(fis, keyDecryptCipher));
             os = new BufferedOutputStream(fos);
             int data = -1;
             while ((data = is.read()) != -1) {
