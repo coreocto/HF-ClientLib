@@ -34,7 +34,7 @@ public class TxtFileParserImpl implements IFileParser {
 
             while ((tempStr = in.readLine()) != null) {
                 tempStr = tempStr.toLowerCase();
-                result.addAll(Arrays.asList(tempStr.split(Constants.REGEX_SPACE)));
+                result.addAll(Arrays.asList(tempStr.split(Constants.REGEX_SPLIT_CHARS)));
             }
         } catch (IOException e) {
             e.printStackTrace();
