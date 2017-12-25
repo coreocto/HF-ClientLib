@@ -1,6 +1,6 @@
 package org.coreocto.dev.hf.clientlib.parser;
 
-import org.coreocto.dev.hf.clientlib.Constants;
+import org.coreocto.dev.hf.clientlib.LibConstants;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -29,12 +29,12 @@ public class TxtFileParserImpl implements IFileParser {
         BufferedReader in = null;
 
         try {
-            in = new BufferedReader(new InputStreamReader(inputStream, Constants.ENCODING_UTF8));
+            in = new BufferedReader(new InputStreamReader(inputStream, LibConstants.ENCODING_UTF8));
             String tempStr = null;
 
             while ((tempStr = in.readLine()) != null) {
                 tempStr = tempStr.toLowerCase();
-                result.addAll(Arrays.asList(tempStr.split(Constants.REGEX_SPLIT_CHARS)));
+                result.addAll(Arrays.asList(tempStr.split(LibConstants.REGEX_SPLIT_CHARS)));
             }
         } catch (IOException e) {
             e.printStackTrace();

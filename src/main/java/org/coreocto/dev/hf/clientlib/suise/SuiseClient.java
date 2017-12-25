@@ -1,6 +1,6 @@
 package org.coreocto.dev.hf.clientlib.suise;
 
-import org.coreocto.dev.hf.clientlib.Constants;
+import org.coreocto.dev.hf.clientlib.LibConstants;
 import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.BlockCipherFactory;
 import org.coreocto.dev.hf.commonlib.crypto.IBlockCipherCbc;
@@ -179,7 +179,7 @@ public class SuiseClient {
         String result = null;
 
         try {
-            byte[] data = registry.getBlockCipherCbc().encrypt(iv1, key1, message.getBytes(Constants.ENCODING_UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(iv1, key1, message.getBytes(LibConstants.ENCODING_UTF8));
             result = registry.getBase64().encodeToString(data);
         } catch (Exception ex) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
@@ -223,7 +223,7 @@ public class SuiseClient {
 
             byte[] encWord = null;
             try {
-                encWord = aes128Cbc.encrypt(iv1, key1, uniqueWordList.get(i).getBytes(Constants.ENCODING_UTF8));
+                encWord = aes128Cbc.encrypt(iv1, key1, uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -272,7 +272,7 @@ public class SuiseClient {
         SearchTokenResult result = new SearchTokenResult();
 
         try {
-            byte[] data = registry.getBlockCipherCbc().encrypt(iv1, key1, keyword.getBytes(Constants.ENCODING_UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(iv1, key1, keyword.getBytes(LibConstants.ENCODING_UTF8));
             result.setSearchToken(registry.getBase64().encodeToString(data));
             searchHistory.add(keyword);
         } catch (Exception ex) {

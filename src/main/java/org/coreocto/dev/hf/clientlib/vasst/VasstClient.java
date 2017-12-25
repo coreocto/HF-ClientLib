@@ -1,7 +1,7 @@
 package org.coreocto.dev.hf.clientlib.vasst;
 
 import ca.rmen.porterstemmer.PorterStemmer;
-import org.coreocto.dev.hf.clientlib.Constants;
+import org.coreocto.dev.hf.clientlib.LibConstants;
 import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.BlockCipherFactory;
 import org.coreocto.dev.hf.commonlib.util.Registry;
@@ -121,7 +121,7 @@ public class VasstClient {
         String result = null;
 
         try {
-            byte[] data = registry.getBlockCipherCbc().encrypt(iv, secretKey, message.getBytes(Constants.ENCODING_UTF8));
+            byte[] data = registry.getBlockCipherCbc().encrypt(iv, secretKey, message.getBytes(LibConstants.ENCODING_UTF8));
             result = registry.getBase64().encodeToString(data);
         } catch (Exception ex) {
             registry.getLogger().log(TAG, "error when invoking " + TAG + ".encryptStr(String)");
@@ -187,7 +187,7 @@ public class VasstClient {
             return result;
         }
 
-        List<String> keywords = Arrays.asList(query.split(Constants.SPACE));
+        List<String> keywords = Arrays.asList(query.split(LibConstants.SPACE));
 
         //filter stop words
         removeStopWords(keywords);

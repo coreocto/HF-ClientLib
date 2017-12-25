@@ -1,6 +1,6 @@
 package org.coreocto.dev.hf.clientlib;
 
-public class Constants {
+public class LibConstants {
     public static final String SPACE = " ";
     public static final String REGEX_SPACE = "\\s";
     public static final String ENCODING_UTF8 = "UTF-8";
