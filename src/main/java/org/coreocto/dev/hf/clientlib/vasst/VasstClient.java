@@ -187,7 +187,7 @@ public class VasstClient {
             return result;
         }
 
-        List<String> keywords = Arrays.asList(query.split(LibConstants.SPACE));
+        List<String> keywords = Arrays.asList(query.split(LibConstants.REGEX_SPACE));
 
         //filter stop words
         removeStopWords(keywords);

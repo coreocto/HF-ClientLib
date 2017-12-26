@@ -14,16 +14,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class SuiseClientTest {
+
+    private SuiseClient suiseClient = null;
+
     @Before
     public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
-    @Test
-    public void test() throws Exception {
         Registry registry = new Registry();
         registry.setBlockCipherCbc(new IBlockCipherCbc() {
             @Override
@@ -64,7 +59,15 @@ public class SuiseClientTest {
             }
         });
         SuiseUtil util = new SuiseUtil(registry);
-        SuiseClient suiseClient = new SuiseClient(registry, util);
+        suiseClient = new SuiseClient(registry, util);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+    }
+
+    @Test
+    public void test() throws Exception {
         suiseClient.Gen(16);
         suiseClient.Enc(new File("/Users/john/Desktop/se.pdf"), new File("/Users/john/Desktop/se-enc.pdf"));
         suiseClient.Dec(new File("/Users/john/Desktop/se-enc.pdf"), new File("/Users/john/Desktop/se-dec.pdf"));
