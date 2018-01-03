@@ -46,6 +46,14 @@ public class SuiseClient {
         return key2;
     }
 
+    public void setKey1(byte[] key1) {
+        this.key1 = key1;
+    }
+
+    public void setKey2(byte[] key2) {
+        this.key2 = key2;
+    }
+
     public void Gen(int noOfBytes) {
         this.key1 = suiseUtil.g(noOfBytes);
         this.key2 = suiseUtil.g(noOfBytes);
