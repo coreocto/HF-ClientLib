@@ -105,28 +105,36 @@ public class VasstClient {
         return registry.getBase64().encodeToString(enc);
     }
 
+    private static List<String> stopWords = new ArrayList<>();
+
+    //this is a method to cache stop word in memory, so that we don't have to load it over and over again.
+    private static List<String> getStopWords() throws IOException {
+        if (stopWords.isEmpty()){
+            // load stop words
+            InputStream is = VasstClient.class.getResourceAsStream("/org/coreocto/dev/hf/clientlib/sse/vasst/eng-stopwords.txt");   //need absolute path to load resource correctly
+            BufferedReader in = new BufferedReader(new InputStreamReader(is));
+            String tempStr = null;
+
+            while ((tempStr = in.readLine()) != null) {
+                tempStr = tempStr.toLowerCase();
+                stopWords.add(tempStr);
+            }
+            // end load stop words
+
+            if (in != null) {
+                in.close();
+            }
+        }
+        return stopWords;
+    }
+
     private void removeStopWords(List<String> wordList) throws IOException {
 
         if (wordList == null || wordList.isEmpty()) {
             return;
         }
 
-        List<String> stopWords = new ArrayList<>();
-
-        // load stop words
-        InputStream is = VasstClient.class.getResourceAsStream("/org/coreocto/dev/hf/clientlib/sse/vasst/eng-stopwords.txt");
-        BufferedReader in = new BufferedReader(new InputStreamReader(is));
-        String tempStr = null;
-
-        while ((tempStr = in.readLine()) != null) {
-            tempStr = tempStr.toLowerCase();
-            stopWords.add(tempStr);
-        }
-        // end load stop words
-
-        if (in != null) {
-            in.close();
-        }
+        List<String> stopWords = getStopWords();//new ArrayList<>();
 
         wordList.remove(stopWords);
     }
