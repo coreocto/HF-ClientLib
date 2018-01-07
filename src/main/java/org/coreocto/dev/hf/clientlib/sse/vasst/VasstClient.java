@@ -114,7 +114,7 @@ public class VasstClient {
         List<String> stopWords = new ArrayList<>();
 
         // load stop words
-        InputStream is = VasstClient.class.getResourceAsStream("eng-stopwords.txt");
+        InputStream is = VasstClient.class.getResourceAsStream("/org/coreocto/dev/hf/clientlib/sse/vasst/eng-stopwords.txt");
         BufferedReader in = new BufferedReader(new InputStreamReader(is));
         String tempStr = null;
 
