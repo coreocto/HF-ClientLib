@@ -1,6 +1,7 @@
 package org.coreocto.dev.hf.clientlib.sse.suise;
 
 import org.coreocto.dev.hf.clientlib.LibConstants;
+import org.coreocto.dev.hf.clientlib.crypto.DummyFcImpl;
 import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.crypto.IFileCipher;
@@ -21,6 +22,16 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class SuiseClient {
+
+    public boolean isDataProtected() {
+        return dataProtected;
+    }
+
+    public void setDataProtected(boolean dataProtected) {
+        this.dataProtected = dataProtected;
+    }
+
+    private boolean dataProtected = true;
 
     private static final String TAG = "SuiseClient";
 
@@ -60,19 +71,27 @@ public class SuiseClient {
     }
 
     public void Dec(InputStream fis, OutputStream fos, IFileCipher fileCipher) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, IOException {
-        fileCipher.decrypt(fis, fos);
+        if (dataProtected) {
+            fileCipher.decrypt(fis, fos);
+        } else {
+            DummyFcImpl.getInstance().decrypt(fis, fos);
+        }
     }
 
     public void Enc(InputStream fis, OutputStream fos, IFileCipher fileCipher) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, IOException {
-        fileCipher.encrypt(fis, fos);
+        if (dataProtected) {
+            fileCipher.encrypt(fis, fos);
+        } else {
+            DummyFcImpl.getInstance().encrypt(fis, fos);
+        }
     }
 
     public void Enc(File fi, File fo, IFileCipher fileCipher) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IOException {
-        fileCipher.encrypt(fi, fo);
+        this.Enc(new FileInputStream(fi), new FileOutputStream(fo), fileCipher);
     }
 
     public void Dec(File fi, File fo, IFileCipher fileCipher) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IOException {
-        fileCipher.decrypt(fi, fo);
+        this.Dec(new FileInputStream(fi), new FileOutputStream(fo), fileCipher);
     }
 
     private String encryptStr(String message, IByteCipher byteCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
@@ -105,35 +124,51 @@ public class SuiseClient {
 
         int uniqueWordCnt = uniqueWordList.size();
 
-        byte[] randomBytes = new byte[16];
-
         IBase64 base64 = registry.getBase64();
 
-        for (int i = 0; i < uniqueWordCnt; i++) {
+        if (dataProtected) {
 
-            suiseUtil.setRandomBytes(randomBytes, i);
+            byte[] randomBytes = new byte[16];
 
-            byte[] encWord = byteCipher.encrypt(uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8));
+            for (int i = 0; i < uniqueWordCnt; i++) {
 
-            String searchToken = base64.encodeToString(encWord);
+                suiseUtil.setRandomBytes(randomBytes, i);
 
-            if (searchHistory.contains(searchToken)) {
-                x.add(searchToken);
+                byte[] encWord = byteCipher.encrypt(uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8));
+
+                String searchToken = base64.encodeToString(encWord);
+
+                if (searchHistory.contains(searchToken)) {
+                    x.add(searchToken);
+                }
+
+                byte[] h = suiseUtil.H(encWord, randomBytes);
+
+                c.add(base64.encodeToString(h) + base64.encodeToString(randomBytes));
             }
 
-            byte[] h = suiseUtil.H(encWord, randomBytes);
+            /*
+            c.sort(new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    return o1.compareTo(o2);
+                }
+            });
+            */
+        } else {
+            for (int i = 0; i < uniqueWordCnt; i++) {
 
-            c.add(base64.encodeToString(h) + base64.encodeToString(randomBytes));
+                byte[] encWord = uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8);
+
+                String searchToken = base64.encodeToString(encWord);
+
+                if (searchHistory.contains(searchToken)) {
+                    x.add(searchToken);
+                }
+
+                c.add(searchToken);
+            }
         }
-
-        /*
-        c.sort(new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                return o1.compareTo(o2);
-            }
-        });
-        */
 
         result.setId(docId);
         result.setC(c);
@@ -149,8 +184,11 @@ public class SuiseClient {
     public SearchTokenResult SearchToken(String keyword, IByteCipher byteCipher) throws BadPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
 
         SearchTokenResult result = new SearchTokenResult();
-
-        result.setSearchToken(encryptStr(keyword, byteCipher));
+        if (dataProtected) {
+            result.setSearchToken(encryptStr(keyword, byteCipher));
+        } else {
+            result.setSearchToken(keyword);
+        }
         searchHistory.add(keyword);
 
         return result;

@@ -2,6 +2,7 @@ package org.coreocto.dev.hf.clientlib.sse.vasst;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import org.coreocto.dev.hf.clientlib.LibConstants;
+import org.coreocto.dev.hf.clientlib.crypto.DummyFcImpl;
 import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.crypto.IFileCipher;
@@ -23,6 +24,16 @@ public class VasstClient {
     private static final String TAG = "VasstClient";
     private Registry registry;
     private byte[] secretKey = null;
+
+    public boolean isDataProtected() {
+        return dataProtected;
+    }
+
+    public void setDataProtected(boolean dataProtected) {
+        this.dataProtected = dataProtected;
+    }
+
+    private boolean dataProtected = true;
 
     public VasstClient(Registry registry) {
         this.registry = registry;
@@ -62,21 +73,23 @@ public class VasstClient {
 
         // encrypt each term
         Map<String, Integer> terms = termFreq.getTerms();
-        Map<String, Integer> encTerms = new HashMap<>();
+        if (dataProtected) {
+            Map<String, Integer> encTerms = new HashMap<>();
 
-        for (Iterator<Map.Entry<String, Integer>> it = terms.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry<String, Integer> entry = it.next();
-            String key = entry.getKey();
-            if (key == null) {
-                continue;
+            for (Iterator<Map.Entry<String, Integer>> it = terms.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<String, Integer> entry = it.next();
+                String key = entry.getKey();
+                if (key == null) {
+                    continue;
+                }
+                String firstRd = encryptStrByCharPos(key, x);
+                String secondRd = encryptStr(firstRd, byteCipher);
+                encTerms.put(secondRd, entry.getValue());
             }
-            String firstRd = encryptStrByCharPos(key, x);
-            String secondRd = encryptStr(firstRd, byteCipher);
-            encTerms.put(secondRd, entry.getValue());
-        }
 
-        terms.clear();
-        terms.putAll(encTerms);
+            terms.clear();
+            terms.putAll(encTerms);
+        }
         return termFreq;
     }
 
@@ -109,7 +122,7 @@ public class VasstClient {
 
     //this is a method to cache stop word in memory, so that we don't have to load it over and over again.
     private static List<String> getStopWords() throws IOException {
-        if (stopWords.isEmpty()){
+        if (stopWords.isEmpty()) {
             // load stop words
             InputStream is = VasstClient.class.getResourceAsStream("/org/coreocto/dev/hf/clientlib/sse/vasst/eng-stopwords.txt");   //need absolute path to load resource correctly
             BufferedReader in = new BufferedReader(new InputStreamReader(is));
@@ -168,21 +181,26 @@ public class VasstClient {
         //do stemming with PorterStemmer
         doStemming(keywords);
 
+        //filter unique words with HashSet
         Set<String> uniqueKeywords = new HashSet<>();
         uniqueKeywords.addAll(keywords);
 
-        for (String uniqueKeyword : uniqueKeywords) {
-            String firstRd = encryptStrByCharPos(uniqueKeyword, x);
-            String secondRd = encryptStr(firstRd, byteCipher);
-            result.add(secondRd);
+        if (dataProtected) {
+            for (String uniqueKeyword : uniqueKeywords) {
+                String firstRd = encryptStrByCharPos(uniqueKeyword, x);
+                String secondRd = encryptStr(firstRd, byteCipher);
+                result.add(secondRd);
+            }
+
+            //this list is returned by Arrays.asList(...), it would throw a UnsupportedOperationException if remove() or clear() is invoked
+            //keywords.clear();
+
+            uniqueKeywords.clear();
+
+            return result;
+        } else {
+            return new ArrayList<>(uniqueKeywords);
         }
-
-        //this list is returned by Arrays.asList(...), it would throw a UnsupportedOperationException if remove() or clear() is invoked
-        //keywords.clear();
-
-        uniqueKeywords.clear();
-
-        return result;
     }
 
     public void Encrypt(File fi, File fo, IFileCipher fileCipher) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IOException {
@@ -194,11 +212,19 @@ public class VasstClient {
     }
 
     public void Encrypt(InputStream fis, OutputStream fos, IFileCipher fileCipher) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, IOException {
-        fileCipher.encrypt(fis, fos);
+        if (dataProtected) {
+            fileCipher.encrypt(fis, fos);
+        } else {
+            DummyFcImpl.getInstance().encrypt(fis, fos);
+        }
     }
 
     public void Decrypt(InputStream fis, OutputStream fos, IFileCipher fileCipher) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, IOException {
-        fileCipher.decrypt(fis, fos);
+        if (dataProtected) {
+            fileCipher.decrypt(fis, fos);
+        } else {
+            DummyFcImpl.getInstance().decrypt(fis, fos);
+        }
     }
 
 }
