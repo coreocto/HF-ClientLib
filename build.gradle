@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile 'com.github.coreocto:HF-CommonLib:4cb878d'
+    compile 'com.github.coreocto:HF-CommonLib:03596ca2eb'
     compile 'com.github.caarmen:porter-stemmer:release-1.0.0'
+//    compile 'com.github.abahgat:suffixtree:1ce6869c2d'
 }

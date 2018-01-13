@@ -2,9 +2,9 @@ package org.coreocto.dev.hf.clientlib.sse.vasst;
 
 import org.coreocto.dev.hf.clientlib.parser.TxtFileParserImpl;
 import org.coreocto.dev.hf.commonlib.crypto.BlockCipherFactory;
-import org.coreocto.dev.hf.commonlib.crypto.IBlockCipherCbc;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.crypto.IFileCipher;
+import org.coreocto.dev.hf.commonlib.sse.vasst.bean.TermFreq;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 import org.coreocto.dev.hf.commonlib.util.ILogger;
 import org.coreocto.dev.hf.commonlib.util.Registry;
@@ -15,12 +15,12 @@ import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
 import javax.crypto.*;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.math.BigDecimal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 public class VasstClientTest {
 
@@ -54,43 +54,43 @@ public class VasstClientTest {
                 return data;
             }
         });
-        registry.setBlockCipherCbc(new IBlockCipherCbc() {
-            @Override
-            public byte[] encrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) {
-                byte[] encrypted = null;
-                try {
-                    IvParameterSpec iv = new IvParameterSpec(bytes);
-                    SecretKeySpec skeySpec = new SecretKeySpec(bytes1, "AES");
-
-                    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-                    cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
-
-                    encrypted = cipher.doFinal(bytes2);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
-                return encrypted;
-            }
-
-            @Override
-            public byte[] decrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) {
-                byte[] decrypted = null;
-                try {
-                    IvParameterSpec iv = new IvParameterSpec(bytes);
-                    SecretKeySpec skeySpec = new SecretKeySpec(bytes1, "AES");
-
-                    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-                    cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
-
-                    decrypted = cipher.doFinal(bytes2);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
-                return decrypted;
-            }
-        });
+//        registry.setBlockCipherCbc(new IBlockCipherCbc() {
+//            @Override
+//            public byte[] encrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) {
+//                byte[] encrypted = null;
+//                try {
+//                    IvParameterSpec iv = new IvParameterSpec(bytes);
+//                    SecretKeySpec skeySpec = new SecretKeySpec(bytes1, "AES");
+//
+//                    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+//                    cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
+//
+//                    encrypted = cipher.doFinal(bytes2);
+//                } catch (Exception ex) {
+//                    ex.printStackTrace();
+//                }
+//
+//                return encrypted;
+//            }
+//
+//            @Override
+//            public byte[] decrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) {
+//                byte[] decrypted = null;
+//                try {
+//                    IvParameterSpec iv = new IvParameterSpec(bytes);
+//                    SecretKeySpec skeySpec = new SecretKeySpec(bytes1, "AES");
+//
+//                    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+//                    cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
+//
+//                    decrypted = cipher.doFinal(bytes2);
+//                } catch (Exception ex) {
+//                    ex.printStackTrace();
+//                }
+//
+//                return decrypted;
+//            }
+//        });
         vasstClient = new VasstClient(registry);
 
         byteCipher = new IByteCipher() {
@@ -182,8 +182,28 @@ public class VasstClientTest {
     @Test
     public void test() throws Exception {
         String docId = "someDocId";
-        byte x = (byte) (Math.random() * (128));
+        //byte x = (byte) (Math.random() * (128));
+        int x = (int) (Math.random() * Integer.MAX_VALUE);
+        x = Integer.MAX_VALUE;
         vasstClient.GenKey(16);
-        vasstClient.Preprocessing(new File("C:\\Users\\John\\Desktop\\20_newsgroups\\alt.atheism\\53519"), x, new TxtFileParserImpl(), byteCipher);
+        BigDecimal x_in_bd = new BigDecimal(x);
+
+        File one_k_char_file = new File("one_k_char_file.txt");
+
+        try (PrintWriter out = new PrintWriter(one_k_char_file)) {
+            for (int i = 0; i < 1000; i++) {
+                out.print('c');
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+
+        }
+
+        TermFreq termFreq = vasstClient.Preprocessing(one_k_char_file, x_in_bd, new TxtFileParserImpl(), byteCipher);
+        for (Map.Entry<String, Integer> entry : termFreq.getTerms().entrySet()) {
+            System.out.println(entry.getKey());
+        }
     }
 }

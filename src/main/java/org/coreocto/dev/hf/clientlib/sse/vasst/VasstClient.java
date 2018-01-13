@@ -8,15 +8,16 @@ import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.crypto.IFileCipher;
 import org.coreocto.dev.hf.commonlib.sse.vasst.bean.TermFreq;
 import org.coreocto.dev.hf.commonlib.util.Registry;
+import org.coreocto.dev.hf.commonlib.util.Util;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
+import java.math.BigDecimal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.*;
 
 public class VasstClient {
@@ -49,12 +50,11 @@ public class VasstClient {
 
     public void GenKey(int noOfBytes) {
         byte[] randomBytes = new byte[noOfBytes];
-        SecureRandom sr = new SecureRandom();
-        sr.nextBytes(randomBytes);
+        Util.fillRandomBytes(randomBytes);
         this.secretKey = randomBytes;
     }
 
-    public TermFreq Preprocessing(InputStream inputStream, byte x, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeyException {
+    public TermFreq Preprocessing(InputStream inputStream, BigDecimal x, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeyException {
         List<String> wordList = fileParser.getText(new BufferedInputStream(inputStream));
 
         //filter stop words
@@ -82,8 +82,8 @@ public class VasstClient {
                 if (key == null) {
                     continue;
                 }
-                String firstRd = encryptStrByCharPos(key, x);
-                String secondRd = encryptStr(firstRd, byteCipher);
+                String firstRd = encryptStr(key, byteCipher);
+                String secondRd = encryptStrByCharPos(firstRd, x);
                 encTerms.put(secondRd, entry.getValue());
             }
 
@@ -94,22 +94,24 @@ public class VasstClient {
     }
 
     //Preprocessing(files, sk, x)
-    public TermFreq Preprocessing(File inFile, byte x, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
+    public TermFreq Preprocessing(File inFile, BigDecimal x, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         return this.Preprocessing(new FileInputStream(inFile), x, fileParser, byteCipher);
     }
 
-    private String encryptStrByCharPos(String message, byte x) {
+    private String encryptStrByCharPos(String message, BigDecimal x) {
         if (message == null || message.isEmpty()) {
             return message;
         } else {
             int len = message.length();
-            double sum = 0;
+            //double sum = 0;
+            BigDecimal sum = BigDecimal.ZERO;
             for (int i = 0; i < len; i++) {
                 byte ascii = (byte) message.charAt(i);
-                double result = ascii * Math.pow(x, len - i);
-                sum += result;
+                BigDecimal partB = x.pow(len - i);
+                BigDecimal ascii_in_bd = BigDecimal.valueOf(ascii);
+                sum = sum.add(partB.multiply(ascii_in_bd));
             }
-            return Double.toHexString(sum);
+            return sum.toPlainString();
         }
     }
 
@@ -166,7 +168,7 @@ public class VasstClient {
         }
     }
 
-    public List<String> CreateReq(String query, byte x, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeyException {
+    public List<String> CreateReq(String query, BigDecimal x, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeyException {
 
         List<String> result = new ArrayList<>();
         if (query == null || query.isEmpty()) {
@@ -187,8 +189,8 @@ public class VasstClient {
 
         if (dataProtected) {
             for (String uniqueKeyword : uniqueKeywords) {
-                String firstRd = encryptStrByCharPos(uniqueKeyword, x);
-                String secondRd = encryptStr(firstRd, byteCipher);
+                String firstRd = encryptStr(uniqueKeyword, byteCipher);
+                String secondRd = encryptStrByCharPos(firstRd, x);
                 result.add(secondRd);
             }
 
