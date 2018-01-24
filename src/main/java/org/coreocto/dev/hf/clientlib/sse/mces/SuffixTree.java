@@ -1,7 +1,5 @@
 package org.coreocto.dev.hf.clientlib.sse.mces;
 
-import org.coreocto.dev.hf.commonlib.util.Util;
-
 import java.util.*;
 
 public class SuffixTree {
@@ -45,7 +43,7 @@ public class SuffixTree {
         private int id = 0;
 
 
-        public int getId(){
+        public int getId() {
             return id;
         }
 
@@ -59,8 +57,65 @@ public class SuffixTree {
 
         private int leafId = -1;
 
-        public int getLeafId(){
+        public int getLeafId() {
             return leafId;
+        }
+
+        //TODO path()
+
+        public String initpath() {
+            if (this.isRoot()) {
+                return "";
+            } else {
+                StringBuilder str = new StringBuilder();
+                Node ref = this;
+                while (ref != null) {
+                    str.insert(0, ref.edgeLabel);
+                    ref = ref.parent;
+                }
+                return str.toString();
+            }
+        }
+
+        //leaf() moved to SuffixTree
+
+        public int len() {
+            return this.initpath().length();
+        }
+
+        //TODO: ind()
+
+        public int leafpos() {
+            if (this.isLeaf()) {
+                return this.leafId;
+            } else {
+
+                int output = -1;
+
+                Stack<Node> s = new Stack<Node>();
+                s.add(this);
+                while (s.isEmpty() == false) {
+                    Node x = s.pop();
+                    for (Node n : x.values()) {
+                        s.add(n);
+                    }
+                    if (x.isLeaf()) {
+                        output = x.leafId;
+                        break;
+                    }
+
+                }
+
+                return output;
+            }
+        }
+
+        public int num() {
+            if (this.isRoot()) {
+                return 0;
+            } else {
+                return this.size();
+            }
         }
     }
 
@@ -94,19 +149,33 @@ public class SuffixTree {
         return true;
     }
 
-    public void dfs(Node rootNode){
+    public void dfs(Node rootNode) {
         Stack<Node> s = new Stack<Node>();
         s.add(rootNode);
         while (s.isEmpty() == false) {
             Node x = s.pop();
-            for (Node n:x.values()){
+            for (Node n : x.values()) {
                 s.add(n);
             }
             System.out.print(" " + x);
         }
     }
 
-    public void assignLeafIdDfs(){
+    public List<Node> getChild(Node rootNode) {
+        List<Node> result = new ArrayList<>();
+        Stack<Node> s = new Stack<Node>();
+        s.add(rootNode);
+        while (s.isEmpty() == false) {
+            Node x = s.pop();
+            for (Node n : x.values()) {
+                s.add(n);
+            }
+            result.add(x);
+        }
+        return result;
+    }
+
+    public void assignLeafIdDfs() {
         Stack<Node> s = new Stack<Node>();
         s.add(root);
 
@@ -114,27 +183,27 @@ public class SuffixTree {
 
         while (s.isEmpty() == false) {
             Node x = s.pop();
-            for (Node n:x.values()){
+            for (Node n : x.values()) {
                 s.add(n);
             }
-            if (x.isLeaf()){
+            if (x.isLeaf()) {
                 x.leafId = idx++;
             }
         }
     }
 
-    public List<Node> getAllNodes(boolean leafOnly){
+    public List<Node> getAllNodes(boolean leafOnly) {
         List<Node> result = new ArrayList<>();
         Stack<Node> s = new Stack<Node>();
         s.add(root);
         while (s.isEmpty() == false) {
             Node x = s.pop();
-            for (Node n:x.values()){
+            for (Node n : x.values()) {
                 s.add(n);
             }
-            if (leafOnly && x.isLeaf()){
+            if (leafOnly && x.isLeaf()) {
                 result.add(x);
-            }else{
+            } else {
                 result.add(x);
             }
         }
@@ -157,12 +226,12 @@ public class SuffixTree {
 //            int i = 0;
 //            while (childIter.hasNext()){
 //                Node child = childIter.next();
-//                String g2 = getInitPath(child);
+//                String g2 = initpath(child);
 //
 //                i++;
 //            }
 //            for (int i=0;i<j;i++){
-//                String g2 = getInitPath(x.)
+//                String g2 = initpath(x.)
 //            }
 //            System.out.print(" " + x);
 //        }
@@ -177,9 +246,9 @@ public class SuffixTree {
     public void optimize() {
         Node ref = root;
 
-        if (ref.isRoot()){
+        if (ref.isRoot()) {
 
-        }else if (ref.size()==1){
+        } else if (ref.size() == 1) {
             Node child = ref.values().iterator().next();
             StringBuilder str = new StringBuilder();
             str.append(ref.edgeLabel);
@@ -210,43 +279,36 @@ public class SuffixTree {
     }
 
 
+//    public int len(Node node) {
+//        return initpath(node).length();
+//    }
 
-    public String getInitPath(Node node) {
-        if (node.isRoot()) {
-            return "";
-        } else {
-            StringBuilder str = new StringBuilder();
-            Node ref = node;
-            while (ref != null) {
-                str.insert(0, ref.edgeLabel);
-                ref = ref.parent;
-            }
-            return str.toString();
-        }
-    }
+//    public int num(Node node) {
+//        if (node.isRoot()){
+//            return 0;
+//        }else{
+//            return node.size();
+//        }
+//    }
 
-    public int getLen(Node node) {
-        return getInitPath(node).length();
-    }
-
-    public String getPath(Node node) {
-        if (node.parent == null) {
-            return "";
-        } else {
-            StringBuilder str = new StringBuilder();
-            str.append(this.getInitPath(node));
-            Node ref = node;
-            while (true) {
-                if (ref.size() != 1) {
-                    break;
-                } else {
-                    ref = ref.values().iterator().next(); //get the "first" child
-                    str.append(ref.edgeLabel);
-                }
-            }
-            return str.toString();
-        }
-    }
+//    public String getPath(Node node) {
+//        if (node.parent == null) {
+//            return "";
+//        } else {
+//            StringBuilder str = new StringBuilder();
+//            str.append(this.initpath(node));
+//            Node ref = node;
+//            while (true) {
+//                if (ref.size() != 1) {
+//                    break;
+//                } else {
+//                    ref = ref.values().iterator().next(); //get the "first" child
+//                    str.append(ref.edgeLabel);
+//                }
+//            }
+//            return str.toString();
+//        }
+//    }
 
 //    public void getLeaves(Node node, List<Node> container) {
 //        if (node != null && node.isLeaf()) {
@@ -278,49 +340,49 @@ public class SuffixTree {
         return strings;
     }
 
-    public static void main(String[] args) {
-        String testStr = "cocoon";
-        SuffixTree sTree = new SuffixTree(testStr);
-        List<String> list = Util.getSubstrings(testStr, false);
-        for (String s : list) {
-            String exists = sTree.contains(s) ? "exists" : "doesn't exist";
-            System.out.printf("Input: %source %source\n", s, exists);
-        }
-
-        sTree.dfs(sTree.root);
-
-
-//        if (false){
-//            sTree.optimize();
-//
-//            List<Node> nodes = new ArrayList<Node>();
-//            sTree.getLeaves(sTree.root, nodes);
-//            System.out.println(nodes);
-//
-//            for (Node cur : nodes) {
-//                System.out.println(sTree.getInitPath(cur.parent));
-//                System.out.println(sTree.getPath(cur.parent));
-//            }
+//    public static void main(String[] args) {
+//        String testStr = "cocoon";
+//        SuffixTree sTree = new SuffixTree(testStr);
+//        List<String> list = Util.getSubstrings(testStr, false);
+//        for (String s : list) {
+//            String exists = sTree.contains(s) ? "exists" : "doesn't exist";
+//            System.out.printf("Input: %source %source\n", s, exists);
 //        }
-
-        /* String[] input = new String[] {
-            "ba",
-            "ban",
-            "ana",
-            "anas",
-            "nan",
-            "anans",
-            "ananas",
-            "n",
-            "source",
-            "as",
-            "naab",
-            "baan",
-            "aan",
-        };
-        for (String source : input) {
-            String exists = sTree.contains(source) ? "exists" : "doesn't exist";
-            System.out.printf("Input: %source %source\n", source, exists);
-        } */
-    }
+//
+//        sTree.dfs(sTree.root);
+//
+//
+////        if (false){
+////            sTree.optimize();
+////
+////            List<Node> nodes = new ArrayList<Node>();
+////            sTree.getLeaves(sTree.root, nodes);
+////            System.out.println(nodes);
+////
+////            for (Node cur : nodes) {
+////                System.out.println(sTree.initpath(cur.parent));
+////                System.out.println(sTree.getPath(cur.parent));
+////            }
+////        }
+//
+//        /* String[] input = new String[] {
+//            "ba",
+//            "ban",
+//            "ana",
+//            "anas",
+//            "nan",
+//            "anans",
+//            "ananas",
+//            "n",
+//            "source",
+//            "as",
+//            "naab",
+//            "baan",
+//            "aan",
+//        };
+//        for (String source : input) {
+//            String exists = sTree.contains(source) ? "exists" : "doesn't exist";
+//            System.out.printf("Input: %source %source\n", source, exists);
+//        } */
+//    }
 }
