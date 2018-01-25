@@ -1,6 +1,7 @@
 package org.coreocto.dev.hf.clientlib.sse.mces;
 
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
+import org.coreocto.dev.hf.commonlib.crypto.IKeyedHashFunc;
 
 public class KeyCipher {
     private IByteCipher kdCipher;
@@ -8,8 +9,15 @@ public class KeyCipher {
     private IByteCipher klCipher;
     private IByteCipher k1Cipher;
     private IByteCipher k2Cipher;
-    private IByteCipher k3Cipher;
-    private IByteCipher k4Cipher;
+    private IKeyedHashFunc keyedHashFunc;
+
+    public IKeyedHashFunc getKeyedHashFunc() {
+        return keyedHashFunc;
+    }
+
+    public void setKeyedHashFunc(IKeyedHashFunc keyedHashFunc) {
+        this.keyedHashFunc = keyedHashFunc;
+    }
 
     public IByteCipher getKdCipher() {
         return kdCipher;
@@ -49,22 +57,6 @@ public class KeyCipher {
 
     public void setK2Cipher(IByteCipher k2Cipher) {
         this.k2Cipher = k2Cipher;
-    }
-
-    public IByteCipher getK3Cipher() {
-        return k3Cipher;
-    }
-
-    public void setK3Cipher(IByteCipher k3Cipher) {
-        this.k3Cipher = k3Cipher;
-    }
-
-    public IByteCipher getK4Cipher() {
-        return k4Cipher;
-    }
-
-    public void setK4Cipher(IByteCipher k4Cipher) {
-        this.k4Cipher = k4Cipher;
     }
 
 }

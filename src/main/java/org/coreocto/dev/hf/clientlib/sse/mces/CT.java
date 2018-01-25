@@ -1,20 +1,19 @@
 package org.coreocto.dev.hf.clientlib.sse.mces;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CT {
-    private List<String> C = new ArrayList<>();
-    private List<String> L = new ArrayList<>();
+    private Map<String, String> C = new HashMap<>();
+    private Map<String, String> L = new HashMap<>();
     private Map<String, List<String>> D = new HashMap<>();
 
-    public List<String> getC() {
+    public Map<String, String> getC() {
         return C;
     }
 
-    public List<String> getL() {
+    public Map<String, String> getL() {
         return L;
     }
 

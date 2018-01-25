@@ -84,11 +84,11 @@ public class McesServer {
         return iniVars.get(iniVars.size() - 1); //this is the W
     }
 
-    public List<String> Query4(List<Integer> x) {
+    public List<String> Query4(List<String> x) {
         List<String> result = new ArrayList<>();
-        List<String> C = cipherText.getC();
+        Map<String, String> C = cipherText.getC();
         for (int i=0;i<x.size();i++){
-            result.add(C.get(i));
+            result.add(C.get(x.get(i)));
         }
         return result;
 //        List<String> copy_of_C = new ArrayList<>(cipherText.getC());

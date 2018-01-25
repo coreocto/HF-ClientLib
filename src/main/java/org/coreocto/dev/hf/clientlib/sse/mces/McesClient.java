@@ -3,7 +3,7 @@ package org.coreocto.dev.hf.clientlib.sse.mces;
 import com.google.gson.Gson;
 import org.coreocto.dev.hf.clientlib.LibConstants;
 import org.coreocto.dev.hf.clientlib.crypto.AesCbcPkcs5BcImpl;
-import org.coreocto.dev.hf.clientlib.crypto.IHmacMd5;
+import org.coreocto.dev.hf.clientlib.crypto.HmacMd5;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 
@@ -104,7 +104,7 @@ public class McesClient {
         return base64.encodeToString(bytes);
     }
 
-    private IHmacMd5 keyHashFunc = new IHmacMd5();
+    private HmacMd5 keyHashFunc = new HmacMd5();
 
     private String f1(SuffixTree.Node u) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
         byte[] initpath_bytes = (u.initpath()).getBytes(LibConstants.ENCODING_UTF8);
@@ -129,8 +129,6 @@ public class McesClient {
 
         List<SuffixTree.Node> allNodes = suffixTree.getAllNodes(false);
         int totalNodeCnt = allNodes.size();
-
-        IHmacMd5 keyHashFunc = new IHmacMd5();
 
         for (int z = 0; z < totalNodeCnt; z++) {
 
@@ -204,21 +202,23 @@ public class McesClient {
         // in original proposal, both C & L are arrays which use PRP to shuffle the content
         // i cannot find one right now, so i used the original index at the moment
         // update: added code to shuffle list contents
-        List<String> C = finalResult.getC();
+        Map<String, String> C = finalResult.getC();
         for (int i = 0; i < n; i++) {
             String tmp = message.substring(i, i + 1) + SEP + i;
-            String encChar = base64.encodeToString(keyCipher.getKcCipher().encrypt(tmp.getBytes(LibConstants.ENCODING_UTF8)));
-            C.add(encChar);
+            String key = base64.encodeToString(keyCipher.getKeyedHashFunc().getHash(this.k3, BigInteger.valueOf(i).toByteArray()));
+            String val = base64.encodeToString(keyCipher.getKcCipher().encrypt(tmp.getBytes(LibConstants.ENCODING_UTF8)));
+            C.put(key, val);
         }
 //        Collections.shuffle(C, new Random(new BigInteger(this.getK3()).longValue()));
 
-        List<String> L = finalResult.getL();
+        Map<String, String> L = finalResult.getL();
         List<SuffixTree.Node> leaves = suffixTree.getAllNodes(true);
         int leafCnt = leaves.size();
         for (int i = 0; i < leafCnt; i++) {
             String tmp = leaves.get(i).getId() + SEP + i;
-            String encStr = base64.encodeToString(keyCipher.getKlCipher().encrypt(tmp.getBytes(LibConstants.ENCODING_UTF8)));
-            L.add(encStr);
+            String key = base64.encodeToString(keyCipher.getKeyedHashFunc().getHash(this.k4, BigInteger.valueOf(i).toByteArray()));
+            String val = base64.encodeToString(keyCipher.getKlCipher().encrypt(tmp.getBytes(LibConstants.ENCODING_UTF8)));
+            L.put(key, val);
         }
 //        Collections.shuffle(L, new Random(new BigInteger(this.getK4()).longValue()));
 
@@ -231,7 +231,7 @@ public class McesClient {
 
         int m = p.length();
 
-        IHmacMd5 keyHashFunc = new IHmacMd5();
+        HmacMd5 keyHashFunc = new HmacMd5();
 
         output.add(base64.encodeToString(keyHashFunc.getHash(this.getK1(), LibConstants.EMPTY_STRING.getBytes(LibConstants.ENCODING_UTF8))));
 
@@ -260,7 +260,7 @@ public class McesClient {
     }
 
     //the return data type here is just temporary, may unify the data type later
-    public List<Integer> Query3(KeyCipher keyCipher, String p, String X, List<String> Tis) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException {
+    public List<String> Query3(KeyCipher keyCipher, String p, String X, List<String> Tis) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException {
 
         boolean canDec = true;
 
@@ -282,7 +282,7 @@ public class McesClient {
             Gson gson = new Gson();
             X x = gson.fromJson(jsonStr, X.class);
 
-            IHmacMd5 keyHashFunc = new IHmacMd5();
+            HmacMd5 keyHashFunc = new HmacMd5();
 
             String f1 = x.getF1();
 
@@ -333,9 +333,11 @@ public class McesClient {
                 //the loop below should be permutation instead of encryption
                 //will implement later
                 //TODO
-                List<Integer> suffleX = new ArrayList<>();
+                List<String> suffleX = new ArrayList<>();
                 for (int i = 0; i < m; i++) {
-                    suffleX.add(ind + i);
+                    byte[] data = BigInteger.valueOf(ind + i).toByteArray();
+                    byte[] curX = keyCipher.getKeyedHashFunc().getHash(this.getK3(), data);
+                    suffleX.add(base64.encodeToString(curX));
                 }
 
                 return suffleX;
@@ -387,7 +389,7 @@ public class McesClient {
                 String data = new String(y_bytes);
                 String[] dataArr = data.split(SEP);
                 int j = Integer.valueOf(dataArr[1]);
-                if (j != (x.getInd() + i - 1 - 1)) {//need to minus 1 because the original scheme index begin with 1
+                if (j != (x.getInd() + i)) {//need to minus 1 because the original scheme index begin with 1
                     return null;
                 } else {
                     pOutput.append(dataArr[0]);
@@ -402,33 +404,38 @@ public class McesClient {
         } else {
             for (int i = 0; i < x.getNum(); i++) {
                 int val = x.getLeafpos() + i - 1;
-                byte[] val_bytes = new IHmacMd5().getHash(this.getK4(), BigInteger.valueOf(val).toByteArray());
+                byte[] val_bytes = keyCipher.getKeyedHashFunc().getHash(this.getK4(), BigInteger.valueOf(val).toByteArray());
                 result.add(base64.encodeToString(val_bytes));
             }
             return result;
         }
     }
 
-    public String Query7(List<String> L, KeyCipher keyCipher) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+    public List<String> Query7(List<String> L, KeyCipher keyCipher) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
         int num = L.size();
         IByteCipher byteCipher = keyCipher.getKlCipher();
+
+        List<String> output = new ArrayList<>();
 
         boolean decryptFailed = false;
         for (int i = 0; i < num; i++) {
             String l_base64 = L.get(i);
             byte[] l_bytes = base64.decodeToByteArray(l_base64);
+            byte[] dec_bytes = null;
             try {
-                byteCipher.decrypt(l_bytes);
+                dec_bytes = byteCipher.decrypt(l_bytes);
             } catch (BadPaddingException ex) {
                 decryptFailed = true;
                 break;
             }
+            String tmp = new String(dec_bytes);
+            output.add(tmp.substring(0, tmp.indexOf(SEP)));
         }
 
         if (decryptFailed) {
             return null;
+        } else {
+            return output;
         }
-
-
     }
 }
