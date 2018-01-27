@@ -24,6 +24,26 @@ public class DummyBcImpl implements IByteCipher {
         return bytes;
     }
 
+    @Override
+    public byte[] encrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+        return bytes;
+    }
+
+    @Override
+    public byte[] decrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+        return bytes;
+    }
+
+    @Override
+    public byte[] encrypt(byte[] bytes, byte[] bytes1) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+        return bytes;
+    }
+
+    @Override
+    public byte[] decrypt(byte[] bytes, byte[] bytes1) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+        return bytes;
+    }
+
     private static DummyBcImpl instance;
 
     public static DummyBcImpl getInstance() {

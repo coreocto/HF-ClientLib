@@ -2,10 +2,9 @@ package org.coreocto.dev.hf.clientlib.sse.mces;
 
 import com.google.gson.Gson;
 import org.coreocto.dev.hf.clientlib.LibConstants;
-import org.coreocto.dev.hf.clientlib.crypto.AesCbcPkcs5BcImpl;
-import org.coreocto.dev.hf.clientlib.crypto.HmacMd5;
 import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
+import org.coreocto.dev.hf.commonlib.crypto.IKeyedHashFunc;
 import org.coreocto.dev.hf.commonlib.sse.mces.CT;
 import org.coreocto.dev.hf.commonlib.sse.mces.KeyCipher;
 import org.coreocto.dev.hf.commonlib.sse.mces.X;
@@ -138,16 +137,14 @@ public class McesClient {
         return base64.encodeToString(bytes);
     }
 
-    private HmacMd5 keyHashFunc = new HmacMd5();
-
-    private String f1(SuffixTree.Node u) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+    private String f1(KeyCipher keyCipher, SuffixTree.Node u) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
         byte[] initpath_bytes = (u.initpath()).getBytes(LibConstants.ENCODING_UTF8);
-        return base64.encodeToString(keyHashFunc.getHash(this.getK1(), initpath_bytes));
+        return base64.encodeToString(keyCipher.getKeyedHashFunc().getHash(this.getK1(), initpath_bytes));
     }
 
-    private String f2(SuffixTree.Node u) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+    private String f2(KeyCipher keyCipher, SuffixTree.Node u) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
         byte[] initpath_bytes = (u.initpath()).getBytes(LibConstants.ENCODING_UTF8);
-        return base64.encodeToString(keyHashFunc.getHash(this.getK2(), initpath_bytes));
+        return base64.encodeToString(keyCipher.getKeyedHashFunc().getHash(this.getK2(), initpath_bytes));
     }
 
     public List<CT> Enc(InputStream is, KeyCipher keyCipher, IFileParser fileParser) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
@@ -176,14 +173,14 @@ public class McesClient {
 
                 List<String> g2 = new ArrayList<>();
 
-                String f1 = f1(u);
+                String f1 = f1(keyCipher, u);
 
                 List<SuffixTree.Node> child = new ArrayList<>(u.values());//suffixTree.getChild(u);
 
                 int childSize = child.size();
 
                 for (int i = 0; i < childSize; i++) {
-                    String encIniPath = f2(child.get(i));
+                    String encIniPath = f2(keyCipher, child.get(i));
                     g2.add(encIniPath);
                 }
 
@@ -289,14 +286,14 @@ public class McesClient {
 
             List<String> g2 = new ArrayList<>();
 
-            String f1 = f1(u);
+            String f1 = f1(keyCipher, u);
 
             List<SuffixTree.Node> child = new ArrayList<>(u.values());//suffixTree.getChild(u);
 
             int childSize = child.size();
 
             for (int i = 0; i < childSize; i++) {
-                String encIniPath = f2(child.get(i));
+                String encIniPath = f2(keyCipher, child.get(i));
                 g2.add(encIniPath);
             }
 
@@ -384,7 +381,7 @@ public class McesClient {
 
         int m = p.length();
 
-        HmacMd5 keyHashFunc = new HmacMd5();
+        IKeyedHashFunc keyHashFunc = keyCipher.getKeyedHashFunc();
 
         output.add(base64.encodeToString(keyHashFunc.getHash(this.getK1(), LibConstants.EMPTY_STRING.getBytes(LibConstants.ENCODING_UTF8))));
 
@@ -399,9 +396,9 @@ public class McesClient {
             byte[] f2_in_bytes = keyHashFunc.getHash(this.getK2(), p1i_bytes);
 //            String f2i = base64.encodeToString(f2_in_bytes);
 
-            IByteCipher f2Cipher = new AesCbcPkcs5BcImpl(f2_in_bytes, new byte[noOfBytes]);
+            IByteCipher f2Cipher = keyCipher.getByteCipher();
 
-            byte[] Ti = f2Cipher.encrypt(f1_in_bytes);
+            byte[] Ti = f2Cipher.encrypt(f1_in_bytes, f2_in_bytes, new byte[noOfBytes]);
             output.add(base64.encodeToString(Ti));
 //            output.add(base64.encodeToString(f1_in_bytes));
 
@@ -435,13 +432,11 @@ public class McesClient {
             Gson gson = new Gson();
             X x = gson.fromJson(jsonStr, X.class);
 
-            HmacMd5 keyHashFunc = new HmacMd5();
-
             String f1 = x.getF1();
 
             String p_substr = p.substring(0, Math.min(p.length(), x.getLen()));
 
-            byte[] enc_p_substr = keyHashFunc.getHash(this.getK1(), p_substr.getBytes(LibConstants.ENCODING_UTF8));
+            byte[] enc_p_substr = keyCipher.getKeyedHashFunc().getHash(this.getK1(), p_substr.getBytes(LibConstants.ENCODING_UTF8));
 
             String enc_p_substr_in_str = base64.encodeToString(enc_p_substr);
 
@@ -459,14 +454,14 @@ public class McesClient {
                     String s = x.getF2().get(i);
                     byte[] f2i_bytes = base64.decodeToByteArray(s);
 
-                    IByteCipher byteCipher = new AesCbcPkcs5BcImpl(f2i_bytes, new byte[16]);
+                    IByteCipher byteCipher = keyCipher.getByteCipher();
 
                     for (int j = x.getLen(); j < m; j++) {
 
                         boolean decryptFail = false;
                         byte[] tmp_bytes = null;
                         try {
-                            tmp_bytes = byteCipher.decrypt(base64.decodeToByteArray(Tis.get(j)));
+                            tmp_bytes = byteCipher.decrypt(base64.decodeToByteArray(Tis.get(j)), f2i_bytes, new byte[16]);
                         } catch (BadPaddingException ex) {
                             decryptFail = true;
                         }
