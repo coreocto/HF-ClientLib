@@ -1,4 +1,4 @@
-package org.coreocto.dev.hf.clientlib.crypto;
+package org.coreocto.dev.hf.clientlib.sse.mces;
 
 import org.coreocto.dev.hf.clientlib.LibConstants;
 import org.coreocto.dev.hf.commonlib.crypto.IKeyedHashFunc;

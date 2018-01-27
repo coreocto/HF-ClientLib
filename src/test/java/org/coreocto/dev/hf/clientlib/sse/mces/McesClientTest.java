@@ -2,8 +2,6 @@ package org.coreocto.dev.hf.clientlib.sse.mces;
 
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
-import org.coreocto.dev.hf.clientlib.crypto.AesCbcPkcs5BcImpl;
-import org.coreocto.dev.hf.clientlib.crypto.HmacMd5;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.crypto.IKeyedHashFunc;
 import org.coreocto.dev.hf.commonlib.util.IBase64;

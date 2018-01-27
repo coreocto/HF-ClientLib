@@ -1,7 +1,7 @@
 package org.coreocto.dev.hf.clientlib.sse.mces;
 
-import org.coreocto.dev.hf.clientlib.crypto.AesCbcPkcs5BcImpl;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
+import org.coreocto.dev.hf.commonlib.sse.mces.CT;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 
 import javax.crypto.BadPaddingException;
