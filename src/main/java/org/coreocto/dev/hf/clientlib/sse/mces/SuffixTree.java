@@ -1,5 +1,7 @@
 package org.coreocto.dev.hf.clientlib.sse.mces;
 
+import org.coreocto.dev.hf.clientlib.LibConstants;
+
 import java.util.*;
 
 public class SuffixTree {
@@ -42,7 +44,6 @@ public class SuffixTree {
 
         private int id = 0;
 
-
         public int getId() {
             return id;
         }
@@ -65,7 +66,7 @@ public class SuffixTree {
 
         public String initpath() {
             if (this.isRoot()) {
-                return "";
+                return LibConstants.EMPTY_STRING;
             } else {
                 StringBuilder str = new StringBuilder();
                 Node ref = this;
@@ -103,7 +104,6 @@ public class SuffixTree {
                         output = x.leafId;
                         break;
                     }
-
                 }
 
                 return output;
@@ -128,8 +128,11 @@ public class SuffixTree {
     /**
      * Creates the suffix tree from the given string.
      */
-    public SuffixTree(String source) {
+    public SuffixTree() {
         this.root = new Node(null, "");
+    }
+
+    public void addString(String source){
         for (int i = 0; i < source.length(); i++) {
             Node n = this.root.getOrPut(source.charAt(i) + "");
             for (int j = i + 1; j < source.length(); j++) {
@@ -243,20 +246,20 @@ public class SuffixTree {
 //        }
 //    }
 
-    public void optimize() {
-        Node ref = root;
-
-        if (ref.isRoot()) {
-
-        } else if (ref.size() == 1) {
-            Node child = ref.values().iterator().next();
-            StringBuilder str = new StringBuilder();
-            str.append(ref.edgeLabel);
-            str.append(child.edgeLabel);
-            ref.edgeLabel = str.toString();
-            ref.clear();
-            ref.putAll(child);
-        }
+//    public void optimize() {
+//        Node ref = root;
+//
+//        if (ref.isRoot()) {
+//
+//        } else if (ref.size() == 1) {
+//            Node child = ref.values().iterator().next();
+//            StringBuilder str = new StringBuilder();
+//            str.append(ref.edgeLabel);
+//            str.append(child.edgeLabel);
+//            ref.edgeLabel = str.toString();
+//            ref.clear();
+//            ref.putAll(child);
+//        }
 
 //        List<Node> allLeaves = new ArrayList<>();
 //        getLeaves(root, allLeaves);
@@ -276,7 +279,7 @@ public class SuffixTree {
 //                ref = ref.parent;
 //            }
 //        }
-    }
+//    }
 
 
 //    public int len(Node node) {

@@ -4,12 +4,14 @@ import com.google.gson.Gson;
 import org.coreocto.dev.hf.clientlib.LibConstants;
 import org.coreocto.dev.hf.clientlib.crypto.AesCbcPkcs5BcImpl;
 import org.coreocto.dev.hf.clientlib.crypto.HmacMd5;
+import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
@@ -116,11 +118,130 @@ public class McesClient {
         return base64.encodeToString(keyHashFunc.getHash(this.getK2(), initpath_bytes));
     }
 
+    public List<CT> Enc(InputStream is, KeyCipher keyCipher, IFileParser fileParser) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
+
+        List<CT> ctList = new ArrayList<>();
+
+        List<String> keywords = fileParser.getText(is);
+
+        for (String keyword : keywords) {
+            CT finalResult = new CT();
+
+            SuffixTree suffixTree = new SuffixTree();
+
+            suffixTree.assignLeafIdDfs();
+
+            Map<String, List<String>> D = finalResult.getD();
+
+            int n = keyword.length();
+
+            List<SuffixTree.Node> allNodes = suffixTree.getAllNodes(false);
+            int totalNodeCnt = allNodes.size();
+
+            for (int z = 0; z < totalNodeCnt; z++) {
+
+                SuffixTree.Node u = allNodes.get(z);
+
+                List<String> g2 = new ArrayList<>();
+
+                String f1 = f1(u);
+
+                List<SuffixTree.Node> child = new ArrayList<>(u.values());//suffixTree.getChild(u);
+
+                int childSize = child.size();
+
+                for (int i = 0; i < childSize; i++) {
+                    String encIniPath = f2(child.get(i));
+                    g2.add(encIniPath);
+                }
+
+                byte[] randomBytes = new byte[noOfBytes];
+                Random random = new Random(0);
+
+                for (int i = childSize; i < n; i++) {
+                    random.nextBytes(randomBytes);
+                    String random_in_b64 = base64.encodeToString(randomBytes);
+                    g2.add(random_in_b64);
+                }
+
+                //copy content from g2 to f2
+                //and then perform permutation, shuffle the content
+                List<String> f2 = new ArrayList<>(g2);
+//            Collections.shuffle(f2, new Random(0));
+
+                //Xu = (ind(u), leafpos(u), num(u), len(u), f1(u), f2,1(u),...,f2,d(u))
+                X Xu = new X();
+                Xu.setInd(u.getId());
+                Xu.setLeafpos(u.leafpos());
+                Xu.setNum(u.num());
+                Xu.setLen(u.len());
+                Xu.setF1(f1);
+                Xu.getF2().addAll(f2);
+
+                String Xu_in_json = new Gson().toJson(Xu);
+//            System.out.println(Xu_in_json);
+
+                byte[] Wu_in_bytes = keyCipher.getKdCipher().encrypt(Xu_in_json.getBytes(LibConstants.ENCODING_UTF8));
+
+                String Wu = base64.encodeToString(Wu_in_bytes);
+
+                List<String> Vu = new ArrayList<>(f2);
+                Vu.add(Wu);
+
+                System.out.println("\"" + u.initpath() + "\"\t\t->\t" + f1);
+                D.put(f1, Vu);
+            }
+
+            //append dummy entries into dictionary D
+            for (int i = 0; i < (2 * n - totalNodeCnt); i++) {
+                String f1 = getRandomStringInBase64(noOfBytes);
+                List<String> f2 = new ArrayList<>();
+                for (int j = 0; j < n; j++) {
+                    f2.add(getRandomStringInBase64(noOfBytes));
+                }
+                byte[] Wu_in_bytes = keyCipher.getKdCipher().encrypt(new byte[16]);
+                String Wu = base64.encodeToString(Wu_in_bytes);
+
+                List<String> Vu = new ArrayList<>(f2);
+                Vu.add(Wu);
+                D.put(f1, Vu);
+            }
+
+            // in original proposal, both C & L are arrays which use PRP to shuffle the content
+            // i cannot find one right now, so i used the original index at the moment
+            // update: added code to shuffle list contents
+            Map<String, String> C = finalResult.getC();
+            for (int i = 0; i < n; i++) {
+                String tmp = keyword.substring(i, i + 1) + SEP + i;
+                String key = base64.encodeToString(keyCipher.getKeyedHashFunc().getHash(this.getK3(), BigInteger.valueOf(i).toByteArray()));
+                String val = base64.encodeToString(keyCipher.getKcCipher().encrypt(tmp.getBytes(LibConstants.ENCODING_UTF8)));
+                C.put(key, val);
+            }
+//        Collections.shuffle(C, new Random(new BigInteger(this.getK3()).longValue()));
+
+            Map<String, String> L = finalResult.getL();
+            List<SuffixTree.Node> leaves = suffixTree.getAllNodes(true);
+            int leafCnt = leaves.size();
+            for (int i = 0; i < leafCnt; i++) {
+                String tmp = leaves.get(i).getId() + SEP + i;
+                String key = base64.encodeToString(keyCipher.getKeyedHashFunc().getHash(this.getK4(), BigInteger.valueOf(i).toByteArray()));
+                String val = base64.encodeToString(keyCipher.getKlCipher().encrypt(tmp.getBytes(LibConstants.ENCODING_UTF8)));
+                L.put(key, val);
+            }
+//        Collections.shuffle(L, new Random(new BigInteger(this.getK4()).longValue()));
+
+            ctList.add(finalResult);
+        }
+
+        return ctList;
+    }
+
     public CT Enc(String message, KeyCipher keyCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
 
         CT finalResult = new CT();
 
-        SuffixTree suffixTree = new SuffixTree(message);
+        SuffixTree suffixTree = new SuffixTree();
+        suffixTree.addString(message);
         suffixTree.assignLeafIdDfs();
 
         Map<String, List<String>> D = finalResult.getD();

@@ -3,7 +3,9 @@ package org.coreocto.dev.hf.clientlib.sse.mces;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import org.coreocto.dev.hf.clientlib.crypto.AesCbcPkcs5BcImpl;
+import org.coreocto.dev.hf.clientlib.crypto.HmacMd5;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
+import org.coreocto.dev.hf.commonlib.crypto.IKeyedHashFunc;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 import org.junit.After;
 import org.junit.Before;
@@ -59,6 +61,7 @@ public class McesClientTest {
         IByteCipher k2ByteCipher = new AesCbcPkcs5BcImpl(client.getK2(), iv);
         IByteCipher k3ByteCipher = new AesCbcPkcs5BcImpl(client.getK3(), iv);
         IByteCipher k4ByteCipher = new AesCbcPkcs5BcImpl(client.getK4(), iv);
+        IKeyedHashFunc keyedHashFunc = new HmacMd5();
         IByteCipher kdByteCipher = new AesCbcPkcs5BcImpl(client.getKd(), iv);
         IByteCipher kcByteCipher = new AesCbcPkcs5BcImpl(client.getKc(), iv);
         IByteCipher klByteCipher = new AesCbcPkcs5BcImpl(client.getKl(), iv);
@@ -66,8 +69,6 @@ public class McesClientTest {
         {
             k1ByteCipher = new AesCbcPkcs5BcImpl(key, iv);
             k2ByteCipher = new AesCbcPkcs5BcImpl(key, iv);
-            k3ByteCipher = new AesCbcPkcs5BcImpl(key, iv);
-            k4ByteCipher = new AesCbcPkcs5BcImpl(key, iv);
             kdByteCipher = new AesCbcPkcs5BcImpl(key, iv);
             kcByteCipher = new AesCbcPkcs5BcImpl(key, iv);
             klByteCipher = new AesCbcPkcs5BcImpl(key, iv);
@@ -76,8 +77,7 @@ public class McesClientTest {
         KeyCipher keyCipher = new KeyCipher();
         keyCipher.setK1Cipher(k1ByteCipher);
         keyCipher.setK2Cipher(k2ByteCipher);
-        keyCipher.setK3Cipher(k3ByteCipher);
-        keyCipher.setK4Cipher(k4ByteCipher);
+        keyCipher.setKeyedHashFunc(keyedHashFunc);
         keyCipher.setKdCipher(kdByteCipher);
         keyCipher.setKcCipher(kcByteCipher);
         keyCipher.setKlCipher(klByteCipher);
@@ -105,7 +105,7 @@ public class McesClientTest {
 
         System.out.println("------------------------------");
 
-        List<Integer> x = client.Query3(keyCipher, testWord, W, query1_output);
+        List<String> x = client.Query3(keyCipher, testWord, W, query1_output);
 
         System.out.println("x = "+x);
 
@@ -117,11 +117,21 @@ public class McesClientTest {
 
         System.out.println("------------------------------");
 
-        List<String> L = client.Query5(keyCipher, testWord, C, W);
+        List<String> y = client.Query5(keyCipher, testWord, C, W);
 
-        server.
+        System.out.println("y = "+y);
 
         System.out.println("------------------------------");
+
+        List<String> L = server.Query6(y);
+
+        System.out.println("L = "+L);
+
+        System.out.println("------------------------------");
+
+        List<String> A = client.Query7(L, keyCipher);
+
+        System.out.println("A = "+A);
 //
 //        List<Integer> decW = client.Query3(keyCipher, word, W, query1_output); //step3.1
 //        System.out.println(decW);
