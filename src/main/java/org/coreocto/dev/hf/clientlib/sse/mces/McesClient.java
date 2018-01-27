@@ -30,6 +30,35 @@ public class McesClient {
     private byte[] k1;
     private byte[] k2;
     private byte[] k3;
+
+    public void setK1(byte[] k1) {
+        this.k1 = k1;
+    }
+
+    public void setK2(byte[] k2) {
+        this.k2 = k2;
+    }
+
+    public void setK3(byte[] k3) {
+        this.k3 = k3;
+    }
+
+    public void setK4(byte[] k4) {
+        this.k4 = k4;
+    }
+
+    public void setKd(byte[] kd) {
+        this.kd = kd;
+    }
+
+    public void setKc(byte[] kc) {
+        this.kc = kc;
+    }
+
+    public void setKl(byte[] kl) {
+        this.kl = kl;
+    }
+
     private byte[] k4;
     private byte[] kd;
     private byte[] kc;
