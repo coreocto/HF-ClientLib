@@ -25,22 +25,22 @@ public class DummyBcImpl implements IByteCipher {
     }
 
     @Override
-    public byte[] encrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+    public byte[] encrypt(byte[] bytes, byte[] keyBytes, byte[] ivBytes) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
         return bytes;
     }
 
     @Override
-    public byte[] decrypt(byte[] bytes, byte[] bytes1, byte[] bytes2) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+    public byte[] decrypt(byte[] bytes, byte[] keyBytes, byte[] ivBytes) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
         return bytes;
     }
 
     @Override
-    public byte[] encrypt(byte[] bytes, byte[] bytes1) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+    public byte[] encrypt(byte[] bytes, byte[] keyBytes) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
         return bytes;
     }
 
     @Override
-    public byte[] decrypt(byte[] bytes, byte[] bytes1) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+    public byte[] decrypt(byte[] bytes, byte[] keyBytes) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
         return bytes;
     }
 

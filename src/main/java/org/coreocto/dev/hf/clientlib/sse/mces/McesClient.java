@@ -219,7 +219,6 @@ public class McesClient {
                 List<String> Vu = new ArrayList<>(f2);
                 Vu.add(Wu);
 
-                System.out.println("\"" + u.initpath() + "\"\t\t->\t" + f1);
                 D.put(f1, Vu);
             }
 
@@ -332,7 +331,7 @@ public class McesClient {
             List<String> Vu = new ArrayList<>(f2);
             Vu.add(Wu);
 
-            System.out.println("\"" + u.initpath() + "\"\t\t->\t" + f1);
+//            System.out.println("\"" + u.initpath() + "\"\t\t->\t" + f1);
             D.put(f1, Vu);
         }
 
