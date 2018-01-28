@@ -158,6 +158,8 @@ public class McesClient {
 
             SuffixTree suffixTree = new SuffixTree();
 
+            suffixTree.addString(keyword);
+
             suffixTree.assignLeafIdDfs();
 
             Map<String, List<String>> D = finalResult.getD();
