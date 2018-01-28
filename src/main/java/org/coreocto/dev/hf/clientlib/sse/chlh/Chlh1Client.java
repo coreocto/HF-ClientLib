@@ -4,6 +4,7 @@ import com.skjegstad.utils.BloomFilter;
 import org.coreocto.dev.hf.clientlib.LibConstants;
 import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
+import org.coreocto.dev.hf.commonlib.sse.chlh.Index;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
 
 import javax.crypto.BadPaddingException;

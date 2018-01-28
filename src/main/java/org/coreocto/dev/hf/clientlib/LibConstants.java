@@ -7,5 +7,4 @@ public class LibConstants {
     public static final String REGEX_NON_WORD = "\\W";
     public static final String REGEX_SPLIT_CHARS = "[\\r?\\n|\\p{Blank}|\\p{Cntrl}]+";
     public static final String EMPTY_STRING = "";
-
 }
