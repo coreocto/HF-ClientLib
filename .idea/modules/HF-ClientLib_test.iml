@@ -10,7 +10,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="HF-ClientLib_main" />
-    <orderEntry type="library" name="Gradle: com.github.coreocto:HF-CommonLib:5f2d2cd" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.coreocto:HF-CommonLib:94ff264" level="project" />
     <orderEntry type="library" name="Gradle: com.github.caarmen:porter-stemmer:release-1.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.2" level="project" />
     <orderEntry type="library" name="Gradle: junit:junit:4.12" level="project" />

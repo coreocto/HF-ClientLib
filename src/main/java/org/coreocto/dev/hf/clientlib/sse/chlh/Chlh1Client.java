@@ -20,13 +20,20 @@ import java.util.List;
 
 public class Chlh1Client {
 
-    private IBase64 base64;
-    private byte[] secretKey = null;
     private static final int BITSET_SIZE = 512;
     private static final int EXPECTED_NUM_OF_ELEMENTS = 500;
-
+    private IBase64 base64;
+    private byte[] secretKey = null;
     public Chlh1Client(IBase64 base64) {
         this.base64 = base64;
+    }
+
+    public byte[] getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(byte[] secretKey) {
+        this.secretKey = secretKey;
     }
 
     public void KeyGen(int secParam) {
@@ -60,7 +67,7 @@ public class Chlh1Client {
                 bloomFilter.add("" + j + chars[j]);
             }
 
-            for (int j = 0; j < 500 - charLen; j++) {
+            for (int j = 0; j < EXPECTED_NUM_OF_ELEMENTS - charLen; j++) {
                 bloomFilter.add(((int) Math.random()) + "");
             }
 
