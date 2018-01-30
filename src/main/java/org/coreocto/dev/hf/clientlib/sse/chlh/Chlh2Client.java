@@ -1,6 +1,7 @@
 package org.coreocto.dev.hf.clientlib.sse.chlh;
 
 import com.skjegstad.utils.BloomFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.coreocto.dev.hf.clientlib.LibConstants;
 import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
@@ -58,25 +59,29 @@ public class Chlh2Client {
         docIndex.setDocId(this.EncId(docId, byteCipher));
 
         for (String keyword : keywords) {
-            char[] chars = keyword.toCharArray();
+//            char[] chars = keyword.toCharArray();
 
             BloomFilter<String> bloomFilter = new BloomFilter(BITSET_SIZE, EXPECTED_NUM_OF_ELEMENTS);
 
-            int charLen = chars.length;
+//            int charLen = chars.length;
+            int keywordLen = keyword.length();
 
-            for (int j = 0; j < charLen; j++) {
-                bloomFilter.add(chars[j] + LibConstants.EMPTY_STRING + j);
+            for (int j = 0; j < keywordLen; j++) {
+                char c = keyword.charAt(j);
+                bloomFilter.add(c + LibConstants.EMPTY_STRING + j);
+                bloomFilter.add(c + LibConstants.EMPTY_STRING + (j + 1 - keywordLen));
 //                System.out.println(chars[j] + "," + j);
-                bloomFilter.add(chars[j] + LibConstants.EMPTY_STRING + 0);
+                bloomFilter.add(c + LibConstants.EMPTY_STRING + 0);
             }
 
-            for (int i = charLen - 1; i >= 0; i--) {
-                bloomFilter.add(chars[i] + LibConstants.EMPTY_STRING + (1 - charLen + i));
-//                System.out.println(chars[i] + "," + (1 - charLen + i));
-            }
+//            for (int i = keywordLen - 1; i >= 0; i--) {
+//                char c = keyword.charAt(i);
+//                bloomFilter.add(c + LibConstants.EMPTY_STRING + (1 - keywordLen + i));
+////                System.out.println(chars[i] + "," + (1 - charLen + i));
+//            }
 
-            for (int j = 0; j < EXPECTED_NUM_OF_ELEMENTS - charLen; j++) {
-                bloomFilter.add(((int) Math.random()) + "");
+            for (int j = 0; j < EXPECTED_NUM_OF_ELEMENTS - keywordLen; j++) {
+                bloomFilter.add(((int) Math.random()) + LibConstants.EMPTY_STRING);
             }
 
             docIndex.getBloomFilters().add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
@@ -94,20 +99,62 @@ public class Chlh2Client {
             return out;
         }
 
-        char[] chars = w.toCharArray();
-
         BloomFilter<String> bloomFilter = new BloomFilter(BITSET_SIZE, EXPECTED_NUM_OF_ELEMENTS);
 
-        int charLen = chars.length;
+        int wLen = w.length();
 
-        for (int j = 0; j < charLen; j++) {
-            bloomFilter.add(chars[j] + LibConstants.EMPTY_STRING + j);
+        int count = countWildcards(w);
+
+        if (count > 0) {
+            //partial match
+
+            //handle one wildcard char
+
+            int leftMostPos = w.indexOf(WILDCARD_CHAR);
+            int rightMostPos = w.lastIndexOf(WILDCARD_CHAR);
+
+            for (int i = 0; i < leftMostPos; i++) {
+                char c = w.charAt(i);
+                bloomFilter.add(c + LibConstants.EMPTY_STRING + i);
+                bloomFilter.add(c + LibConstants.EMPTY_STRING + 0);
+            }
+
+            for (int i = wLen - 1; i > rightMostPos; i--) {
+                char c = w.charAt(i);
+                bloomFilter.add(c + LibConstants.EMPTY_STRING + (i + 1 - wLen));
+                bloomFilter.add(c + LibConstants.EMPTY_STRING + 0);
+            }
+
+        } else {
+            //exact match
+
+            for (int i = 0; i < wLen; i++) {
+                bloomFilter.add(w.charAt(i) + LibConstants.EMPTY_STRING + i);
+            }
         }
+
+//        for (int i = wLen - 1; i>=0;i--){
+//            bloomFilter.add(w.charAt(i) + LibConstants.EMPTY_STRING + (1 - wLen + i));
+//        }
+
+//        char[] chars = w.toCharArray();
+//
+//        int charLen = chars.length;
+//
+//        for (int j = 0; j < charLen; j++) {
+//            bloomFilter.add(chars[j] + LibConstants.EMPTY_STRING + j);
+//        }
 
         out.add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
         bloomFilter.clear();
 
         return out;
     }
+
+    public int countWildcards(String s) {
+        return StringUtils.countMatches(s, '*');
+    }
+
+    public static final char WILDCARD_CHAR = '*';
 }
 
