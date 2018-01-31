@@ -58,10 +58,12 @@ public class Chlh2Client {
         Index docIndex = new Index();
         docIndex.setDocId(this.EncId(docId, byteCipher));
 
+        BloomFilter<String> bloomFilter = new BloomFilter(BITSET_SIZE, EXPECTED_NUM_OF_ELEMENTS);
+
+        int wordCnt = 0;
+
         for (String keyword : keywords) {
 //            char[] chars = keyword.toCharArray();
-
-            BloomFilter<String> bloomFilter = new BloomFilter(BITSET_SIZE, EXPECTED_NUM_OF_ELEMENTS);
 
 //            int charLen = chars.length;
             int keywordLen = keyword.length();
@@ -79,14 +81,16 @@ public class Chlh2Client {
 //                bloomFilter.add(c + LibConstants.EMPTY_STRING + (1 - keywordLen + i));
 ////                System.out.println(chars[i] + "," + (1 - charLen + i));
 //            }
-
-            for (int j = 0; j < EXPECTED_NUM_OF_ELEMENTS - keywordLen; j++) {
-                bloomFilter.add(((int) Math.random()) + LibConstants.EMPTY_STRING);
-            }
-
-            docIndex.getBloomFilters().add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
-            bloomFilter.clear();
+            wordCnt++;
         }
+
+        for (int j = 0; j < EXPECTED_NUM_OF_ELEMENTS - wordCnt; j++) {
+            bloomFilter.add(((int) Math.random()) + LibConstants.EMPTY_STRING);
+        }
+
+        docIndex.getBloomFilters().add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
+
+        bloomFilter.clear();
 
         return docIndex;
     }
