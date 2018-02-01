@@ -88,6 +88,8 @@ public class Chlh2Client {
             bloomFilter.add(((int) Math.random()) + LibConstants.EMPTY_STRING);
         }
 
+        docIndex.setWordCnt(wordCnt);
+
         docIndex.getBloomFilters().add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
 
         bloomFilter.clear();
@@ -107,14 +109,15 @@ public class Chlh2Client {
 
         int wLen = w.length();
 
-        int count = countWildcards(w);
+        int leftMostPos = w.indexOf(WILDCARD_CHAR);
 
-        if (count > 0) {
+//        int count = countWildcards(w);
+
+        if (leftMostPos != -1) {
             //partial match
 
             //handle one wildcard char
 
-            int leftMostPos = w.indexOf(WILDCARD_CHAR);
             int rightMostPos = w.lastIndexOf(WILDCARD_CHAR);
 
             for (int i = 0; i < leftMostPos; i++) {

@@ -18,7 +18,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Gradle: com.github.coreocto:HF-CommonLib:94ff264" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.coreocto:HF-CommonLib:a5bbee1" level="project" />
     <orderEntry type="library" name="Gradle: com.github.caarmen:porter-stemmer:release-1.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.2" level="project" />
   </component>
