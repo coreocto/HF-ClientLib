@@ -49,6 +49,10 @@ public class SuiseClient {
         this.searchHistory = new HashSet<>();
     }
 
+    public Collection<String> getSearchHistory() {
+        return this.searchHistory;
+    }
+
     public byte[] getKey1() {
         return key1;
     }
