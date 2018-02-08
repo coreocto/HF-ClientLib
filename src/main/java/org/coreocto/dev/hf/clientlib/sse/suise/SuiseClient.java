@@ -104,7 +104,7 @@ public class SuiseClient {
 //        return registry.getBase64().encodeToString(enc);
 //    }
 
-    public AddTokenResult AddToken(InputStream inputStream, boolean includePrefix, boolean includeSuffix, String docId, IFileParser fileParser, IKeyedHashFunc keyedHashFunc) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
+    public AddTokenResult AddToken(InputStream inputStream, boolean includePrefix, boolean includeSuffix, String docId, IFileParser fileParser, IKeyedHashFunc keyedHashFunc, Random random) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         AddTokenResult result = new AddTokenResult();
 
         Set<String> uniqueWordSet = new HashSet<>();
@@ -157,7 +157,7 @@ public class SuiseClient {
 
             for (int i = 0; i < uniqueWordCnt; i++) {
 
-                suiseUtil.setRandomBytes(randomBytes, i);
+//                suiseUtil.setRandomBytes(randomBytes, i);
 
                 byte[] encWord = keyedHashFunc.getHash(this.getKey1(), uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8));
 
@@ -169,21 +169,22 @@ public class SuiseClient {
                     x.add(searchToken);
                 }
 
+                random.nextBytes(randomBytes);
+
                 byte[] h = keyedHashFunc.getHash(encWord, randomBytes);
+
+                byte[] combine = new byte[h.length + randomBytes.length];
+                System.arraycopy(h, 0, combine, 0, h.length);
+                System.arraycopy(randomBytes, 0, combine, h.length, randomBytes.length);
 
 //                byte[] h = suiseUtil.H(encWord, randomBytes);
 
-                c.add(base64.encodeToString(h) + base64.encodeToString(randomBytes));
+//                c.add(base64.encodeToString(h) + base64.encodeToString(randomBytes));
+                c.add(base64.encodeToString(combine));
             }
 
-            /*
-            c.sort(new Comparator<String>() {
-                @Override
-                public int compare(String o1, String o2) {
-                    return o1.compareTo(o2);
-                }
-            });
-            */
+            Collections.sort(c);
+
         } else {
             for (int i = 0; i < uniqueWordCnt; i++) {
 
@@ -282,8 +283,8 @@ public class SuiseClient {
 //        return result;
 //    }
 
-    public AddTokenResult AddToken(File inFile, boolean includePrefix, boolean includeSuffix, String docId, IFileParser fileParser, IKeyedHashFunc keyedHashFunc) throws FileNotFoundException, BadPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
-        return this.AddToken(new BufferedInputStream(new FileInputStream(inFile)), includePrefix, includeSuffix, docId, fileParser, keyedHashFunc);
+    public AddTokenResult AddToken(File inFile, boolean includePrefix, boolean includeSuffix, String docId, IFileParser fileParser, IKeyedHashFunc keyedHashFunc, Random random) throws FileNotFoundException, BadPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+        return this.AddToken(new BufferedInputStream(new FileInputStream(inFile)), includePrefix, includeSuffix, docId, fileParser, keyedHashFunc, random);
     }
 
     private String hashStr(String keyword, IKeyedHashFunc keyedHashFunc) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
