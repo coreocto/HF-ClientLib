@@ -7,7 +7,7 @@ import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.crypto.IFileCipher;
 import org.coreocto.dev.hf.commonlib.sse.vasst.bean.TermFreq;
-import org.coreocto.dev.hf.commonlib.util.Registry;
+import org.coreocto.dev.hf.commonlib.util.IBase64;
 import org.coreocto.dev.hf.commonlib.util.Util;
 
 import javax.crypto.BadPaddingException;
@@ -20,10 +20,12 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
+//import org.coreocto.dev.hf.commonlib.util.Registry;
+
 public class VasstClient {
 
     private static final String TAG = "VasstClient";
-    private Registry registry;
+//    private Registry registry;
     private byte[] secretKey = null;
 
     public boolean isDataProtected() {
@@ -36,8 +38,10 @@ public class VasstClient {
 
     private boolean dataProtected = true;
 
-    public VasstClient(Registry registry) {
-        this.registry = registry;
+    private IBase64 base64 = null;
+
+    public VasstClient(IBase64 base64) {
+        this.base64 = base64;
     }
 
     public byte[] getSecretKey() {
@@ -117,7 +121,7 @@ public class VasstClient {
 
     private String encryptStr(String message, IByteCipher byteCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         byte[] enc = byteCipher.encrypt(message.getBytes(LibConstants.ENCODING_UTF8));
-        return registry.getBase64().encodeToString(enc);
+        return base64.encodeToString(enc);
     }
 
     private static List<String> stopWords = new ArrayList<>();
