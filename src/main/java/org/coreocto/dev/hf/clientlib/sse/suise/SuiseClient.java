@@ -298,7 +298,8 @@ public class SuiseClient {
         if (dataProtected) {
             result.setSearchToken(hashStr(keyword, keyedHashFunc));
         } else {
-            result.setSearchToken(keyword);
+            byte[] keywordBytes = keyword.getBytes(LibConstants.ENCODING_UTF8);
+            result.setSearchToken(base64.encodeToString(keywordBytes));
         }
         searchHistory.add(keyword);
 
