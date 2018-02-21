@@ -7,6 +7,7 @@ import org.coreocto.dev.hf.clientlib.parser.IFileParser;
 import org.coreocto.dev.hf.commonlib.crypto.IByteCipher;
 import org.coreocto.dev.hf.commonlib.sse.chlh.Index;
 import org.coreocto.dev.hf.commonlib.util.IBase64;
+import org.coreocto.dev.hf.commonlib.util.Util;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -21,6 +22,7 @@ import java.util.List;
 
 public class Chlh2Client {
 
+    public static final char WILDCARD_CHAR = '*';
     private static final int BITSET_SIZE = 512 * 2;
     private static final int EXPECTED_NUM_OF_ELEMENTS = 500 * 2;
     private IBase64 base64;
@@ -40,16 +42,17 @@ public class Chlh2Client {
 
     public void KeyGen(int secParam) {
         secretKey = new byte[secParam];
+        Util.fillRandomBytes(secretKey);
     }
 
     public String EncId(String docId, IByteCipher byteCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
-        byte[] enc = byteCipher.encrypt(docId.getBytes(LibConstants.ENCODING_UTF8));
+        byte[] enc = byteCipher.encrypt(docId.getBytes(LibConstants.CHARSET_UTF8));
         return base64.encodeToString(enc);
     }
 
     public String DecId(String encDocId, IByteCipher byteCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         byte[] dec = byteCipher.decrypt(base64.decodeToByteArray(encDocId));
-        return new String(dec, LibConstants.ENCODING_UTF8);
+        return new String(dec, LibConstants.CHARSET_UTF8);
     }
 
     public Index BuildIndex(InputStream is, IFileParser fileParser, String docId, IByteCipher byteCipher) throws BadPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
@@ -63,24 +66,16 @@ public class Chlh2Client {
         int wordCnt = 0;
 
         for (String keyword : keywords) {
-//            char[] chars = keyword.toCharArray();
 
-//            int charLen = chars.length;
             int keywordLen = keyword.length();
 
             for (int j = 0; j < keywordLen; j++) {
                 char c = keyword.charAt(j);
                 bloomFilter.add(c + LibConstants.EMPTY_STRING + j);
                 bloomFilter.add(c + LibConstants.EMPTY_STRING + (j + 1 - keywordLen));
-//                System.out.println(chars[j] + "," + j);
                 bloomFilter.add(c + LibConstants.EMPTY_STRING + 0);
             }
 
-//            for (int i = keywordLen - 1; i >= 0; i--) {
-//                char c = keyword.charAt(i);
-//                bloomFilter.add(c + LibConstants.EMPTY_STRING + (1 - keywordLen + i));
-////                System.out.println(chars[i] + "," + (1 - charLen + i));
-//            }
             wordCnt++;
         }
 
@@ -111,8 +106,6 @@ public class Chlh2Client {
 
         int leftMostPos = w.indexOf(WILDCARD_CHAR);
 
-//        int count = countWildcards(w);
-
         if (leftMostPos != -1) {
             //partial match
 
@@ -140,18 +133,6 @@ public class Chlh2Client {
             }
         }
 
-//        for (int i = wLen - 1; i>=0;i--){
-//            bloomFilter.add(w.charAt(i) + LibConstants.EMPTY_STRING + (1 - wLen + i));
-//        }
-
-//        char[] chars = w.toCharArray();
-//
-//        int charLen = chars.length;
-//
-//        for (int j = 0; j < charLen; j++) {
-//            bloomFilter.add(chars[j] + LibConstants.EMPTY_STRING + j);
-//        }
-
         out.add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
         bloomFilter.clear();
 
@@ -161,7 +142,5 @@ public class Chlh2Client {
     public int countWildcards(String s) {
         return StringUtils.countMatches(s, '*');
     }
-
-    public static final char WILDCARD_CHAR = '*';
 }
 

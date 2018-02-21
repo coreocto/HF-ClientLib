@@ -25,8 +25,51 @@ import java.util.*;
 public class VasstClient {
 
     private static final String TAG = "VasstClient";
-//    private Registry registry;
+    private static List<String> stopWords = new ArrayList<>();
     private byte[] secretKey = null;
+    private boolean dataProtected = true;
+    private IBase64 base64 = null;
+
+    public VasstClient(IBase64 base64) {
+        this.base64 = base64;
+    }
+
+    //this is a method to cache stop word in memory, so that we don't have to load it over and over again.
+    private static List<String> getStopWords() {
+        if (stopWords.isEmpty()) {
+            // load stop words
+            InputStream is = null;
+            BufferedReader in = null;
+            try {
+                is = VasstClient.class.getResourceAsStream("/org/coreocto/dev/hf/clientlib/sse/vasst/eng-stopwords.txt");   //need absolute path to load resource correctly
+                in = new BufferedReader(new InputStreamReader(is));
+                String tempStr = null;
+
+                while ((tempStr = in.readLine()) != null) {
+                    tempStr = tempStr.toLowerCase();
+                    stopWords.add(tempStr);
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            // end load stop words
+
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                }
+            }
+
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return stopWords;
+    }
 
     public boolean isDataProtected() {
         return dataProtected;
@@ -34,14 +77,6 @@ public class VasstClient {
 
     public void setDataProtected(boolean dataProtected) {
         this.dataProtected = dataProtected;
-    }
-
-    private boolean dataProtected = true;
-
-    private IBase64 base64 = null;
-
-    public VasstClient(IBase64 base64) {
-        this.base64 = base64;
     }
 
     public byte[] getSecretKey() {
@@ -97,7 +132,6 @@ public class VasstClient {
         return termFreq;
     }
 
-    //Preprocessing(files, sk, x)
     public TermFreq Preprocessing(File inFile, BigDecimal x, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         return this.Preprocessing(new FileInputStream(inFile), x, fileParser, byteCipher);
     }
@@ -107,7 +141,7 @@ public class VasstClient {
             return message;
         } else {
             int len = message.length();
-            //double sum = 0;
+
             BigDecimal sum = BigDecimal.ZERO;
             for (int i = 0; i < len; i++) {
                 byte ascii = (byte) message.charAt(i);
@@ -122,29 +156,6 @@ public class VasstClient {
     private String encryptStr(String message, IByteCipher byteCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         byte[] enc = byteCipher.encrypt(message.getBytes(LibConstants.ENCODING_UTF8));
         return base64.encodeToString(enc);
-    }
-
-    private static List<String> stopWords = new ArrayList<>();
-
-    //this is a method to cache stop word in memory, so that we don't have to load it over and over again.
-    private static List<String> getStopWords() throws IOException {
-        if (stopWords.isEmpty()) {
-            // load stop words
-            InputStream is = VasstClient.class.getResourceAsStream("/org/coreocto/dev/hf/clientlib/sse/vasst/eng-stopwords.txt");   //need absolute path to load resource correctly
-            BufferedReader in = new BufferedReader(new InputStreamReader(is));
-            String tempStr = null;
-
-            while ((tempStr = in.readLine()) != null) {
-                tempStr = tempStr.toLowerCase();
-                stopWords.add(tempStr);
-            }
-            // end load stop words
-
-            if (in != null) {
-                in.close();
-            }
-        }
-        return stopWords;
     }
 
     private void removeStopWords(List<String> wordList) throws IOException {

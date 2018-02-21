@@ -11,7 +11,16 @@ import java.security.NoSuchAlgorithmException;
 
 public class DummyFcImpl implements IFileCipher {
 
+    private static DummyFcImpl instance;
+
     private DummyFcImpl() {
+    }
+
+    public static DummyFcImpl getInstance() {
+        if (instance == null) {
+            instance = new DummyFcImpl();
+        }
+        return instance;
     }
 
     @Override
@@ -32,14 +41,5 @@ public class DummyFcImpl implements IFileCipher {
     @Override
     public void decrypt(InputStream inputStream, OutputStream outputStream) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IOException {
         Util.copy(inputStream, outputStream);
-    }
-
-    private static DummyFcImpl instance;
-
-    public static DummyFcImpl getInstance() {
-        if (instance == null) {
-            instance = new DummyFcImpl();
-        }
-        return instance;
     }
 }

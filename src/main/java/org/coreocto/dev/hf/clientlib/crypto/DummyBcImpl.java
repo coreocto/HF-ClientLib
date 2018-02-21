@@ -11,7 +11,16 @@ import java.security.NoSuchAlgorithmException;
 
 public class DummyBcImpl implements IByteCipher {
 
+    private static DummyBcImpl instance;
+
     private DummyBcImpl() {
+    }
+
+    public static DummyBcImpl getInstance() {
+        if (instance == null) {
+            instance = new DummyBcImpl();
+        }
+        return instance;
     }
 
     @Override
@@ -42,14 +51,5 @@ public class DummyBcImpl implements IByteCipher {
     @Override
     public byte[] decrypt(byte[] bytes, byte[] keyBytes) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
         return bytes;
-    }
-
-    private static DummyBcImpl instance;
-
-    public static DummyBcImpl getInstance() {
-        if (instance == null) {
-            instance = new DummyBcImpl();
-        }
-        return instance;
     }
 }

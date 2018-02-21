@@ -22,32 +22,26 @@ import java.util.*;
 
 public class SuiseClient {
 
+    private static final String TAG = "SuiseClient";
+    private boolean dataProtected = true;
+    private byte[] key1 = null;
+    private byte[] key2 = null;
+    private Set<String> searchHistory = null;   //contains a set of searched keyword (in plain text)
+    private SuiseUtil suiseUtil = null;
+    private IBase64 base64 = null;
+
+    public SuiseClient(SuiseUtil suiseUtil, IBase64 base64) {
+        this.suiseUtil = suiseUtil;
+        this.searchHistory = new HashSet<>();
+        this.base64 = base64;
+    }
+
     public boolean isDataProtected() {
         return dataProtected;
     }
 
     public void setDataProtected(boolean dataProtected) {
         this.dataProtected = dataProtected;
-    }
-
-    private boolean dataProtected = true;
-
-    private static final String TAG = "SuiseClient";
-
-    private byte[] key1 = null;
-    private byte[] key2 = null;
-
-    private Set<String> searchHistory = null;   //contains a set of searched keyword (in plain text)
-    private SuiseUtil suiseUtil = null;
-    private IBase64 base64 = null;
-
-//    private Registry registry;
-
-    public SuiseClient(SuiseUtil suiseUtil, IBase64 base64) {
-//        this.registry = registry;
-        this.suiseUtil = suiseUtil;
-        this.searchHistory = new HashSet<>();
-        this.base64 = base64;
     }
 
     public Collection<String> getSearchHistory() {
@@ -58,12 +52,12 @@ public class SuiseClient {
         return key1;
     }
 
-    public byte[] getKey2() {
-        return key2;
-    }
-
     public void setKey1(byte[] key1) {
         this.key1 = key1;
+    }
+
+    public byte[] getKey2() {
+        return key2;
     }
 
     public void setKey2(byte[] key2) {
@@ -99,11 +93,6 @@ public class SuiseClient {
         this.Dec(new FileInputStream(fi), new FileOutputStream(fo), fileCipher);
     }
 
-//    private String encryptStr(String message, IByteCipher byteCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
-//        byte[] enc = byteCipher.encrypt(message.getBytes(LibConstants.ENCODING_UTF8));
-//        return registry.getBase64().encodeToString(enc);
-//    }
-
     public AddTokenResult AddToken(InputStream inputStream, boolean includePrefix, boolean includeSuffix, String docId, IFileParser fileParser, IKeyedHashFunc keyedHashFunc, Random random) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         AddTokenResult result = new AddTokenResult();
 
@@ -124,6 +113,7 @@ public class SuiseClient {
 
             uniqueWordList.clear();
             uniqueWordList.addAll(s);
+            s.clear(); //added to minimize memory usage
             Collections.sort(uniqueWordList);
         } else if (includePrefix) {
             Set<String> s = new HashSet<>();
@@ -135,6 +125,7 @@ public class SuiseClient {
             }
             uniqueWordList.clear();
             uniqueWordList.addAll(s);
+            s.clear(); //added to minimize memory usage
             Collections.sort(uniqueWordList);
         } else if (includeSuffix) {
             Set<String> s = new HashSet<>();
@@ -146,6 +137,7 @@ public class SuiseClient {
             }
             uniqueWordList.clear();
             uniqueWordList.addAll(s);
+            s.clear(); //added to minimize memory usage
             Collections.sort(uniqueWordList);
         }
 
@@ -157,11 +149,7 @@ public class SuiseClient {
 
             for (int i = 0; i < uniqueWordCnt; i++) {
 
-//                suiseUtil.setRandomBytes(randomBytes, i);
-
-                byte[] encWord = keyedHashFunc.getHash(this.getKey1(), uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8));
-
-//                byte[] encWord = byteCipher.encrypt(uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8));
+                byte[] encWord = keyedHashFunc.getHash(this.getKey1(), uniqueWordList.get(i).getBytes(LibConstants.CHARSET_UTF8));
 
                 String searchToken = base64.encodeToString(encWord);
 
@@ -177,9 +165,6 @@ public class SuiseClient {
                 System.arraycopy(h, 0, combine, 0, h.length);
                 System.arraycopy(randomBytes, 0, combine, h.length, randomBytes.length);
 
-//                byte[] h = suiseUtil.H(encWord, randomBytes);
-
-//                c.add(base64.encodeToString(h) + base64.encodeToString(randomBytes));
                 c.add(base64.encodeToString(combine));
             }
 
@@ -188,7 +173,7 @@ public class SuiseClient {
         } else {
             for (int i = 0; i < uniqueWordCnt; i++) {
 
-                byte[] encWord = uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8);
+                byte[] encWord = uniqueWordList.get(i).getBytes(LibConstants.CHARSET_UTF8);
 
                 String searchToken = base64.encodeToString(encWord);
 
@@ -200,6 +185,8 @@ public class SuiseClient {
             }
         }
 
+        uniqueWordList.clear(); //added to minimize memory usage
+
         result.setId(docId);
         result.setC(c);
         result.setX(x);
@@ -207,88 +194,12 @@ public class SuiseClient {
         return result;
     }
 
-//    public AddTokenResult AddToken(InputStream inputStream, boolean includePrefix, boolean includeSuffix, String docId, IFileParser fileParser, IByteCipher byteCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
-//        AddTokenResult result = new AddTokenResult();
-//
-//        Set<String> uniqueWordSet = new HashSet<>();
-//        List<String> x = new ArrayList<>();
-//        List<String> c = new ArrayList<>();
-//
-//        uniqueWordSet.addAll(fileParser.getText(inputStream));
-//
-//        List<String> uniqueWordList = new ArrayList<>(uniqueWordSet);
-//
-//        Set<String> s = new HashSet<>();
-//        for (String uniqueWord : uniqueWordList) {
-//            List<String> substrings = Util.getSubstrings(uniqueWord, true);
-//            s.addAll(substrings);
-//        }
-//
-//        uniqueWordList.clear();
-//        uniqueWordList.addAll(s);
-//        Collections.sort(uniqueWordList);
-//
-//        int uniqueWordCnt = uniqueWordList.size();
-//
-//        IBase64 base64 = registry.getBase64();
-//
-//        if (dataProtected) {
-//
-//            byte[] randomBytes = new byte[16];
-//
-//            for (int i = 0; i < uniqueWordCnt; i++) {
-//
-//                suiseUtil.setRandomBytes(randomBytes, i);
-//
-//                byte[] encWord = byteCipher.encrypt(uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8));
-//
-//                String searchToken = base64.encodeToString(encWord);
-//
-//                if (searchHistory.contains(searchToken)) {
-//                    x.add(searchToken);
-//                }
-//
-//                byte[] h = suiseUtil.H(encWord, randomBytes);
-//
-//                c.add(base64.encodeToString(h) + base64.encodeToString(randomBytes));
-//            }
-//
-//            /*
-//            c.sort(new Comparator<String>() {
-//                @Override
-//                public int compare(String o1, String o2) {
-//                    return o1.compareTo(o2);
-//                }
-//            });
-//            */
-//        } else {
-//            for (int i = 0; i < uniqueWordCnt; i++) {
-//
-//                byte[] encWord = uniqueWordList.get(i).getBytes(LibConstants.ENCODING_UTF8);
-//
-//                String searchToken = base64.encodeToString(encWord);
-//
-//                if (searchHistory.contains(searchToken)) {
-//                    x.add(searchToken);
-//                }
-//
-//                c.add(searchToken);
-//            }
-//        }
-//
-//        result.setId(docId);
-//        result.setC(c);
-//        result.setX(x);
-//
-//        return result;
-//    }
-
     public AddTokenResult AddToken(File inFile, boolean includePrefix, boolean includeSuffix, String docId, IFileParser fileParser, IKeyedHashFunc keyedHashFunc, Random random) throws FileNotFoundException, BadPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         return this.AddToken(new BufferedInputStream(new FileInputStream(inFile)), includePrefix, includeSuffix, docId, fileParser, keyedHashFunc, random);
     }
 
     private String hashStr(String keyword, IKeyedHashFunc keyedHashFunc) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
-        byte[] hashBytes = keyedHashFunc.getHash(this.getKey1(), keyword.getBytes(LibConstants.ENCODING_UTF8));
+        byte[] hashBytes = keyedHashFunc.getHash(this.getKey1(), keyword.getBytes(LibConstants.CHARSET_UTF8));
         return base64.encodeToString(hashBytes);
     }
 
@@ -298,7 +209,7 @@ public class SuiseClient {
         if (dataProtected) {
             result.setSearchToken(hashStr(keyword, keyedHashFunc));
         } else {
-            byte[] keywordBytes = keyword.getBytes(LibConstants.ENCODING_UTF8);
+            byte[] keywordBytes = keyword.getBytes(LibConstants.CHARSET_UTF8);
             result.setSearchToken(base64.encodeToString(keywordBytes));
         }
         searchHistory.add(keyword);
