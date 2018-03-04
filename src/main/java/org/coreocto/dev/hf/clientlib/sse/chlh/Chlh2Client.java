@@ -96,9 +96,6 @@ public class Chlh2Client {
         } else if (mode == 3) {
             bloomFilter = new BloomFilter<>(falsePositiveProbability, expectedNumberOElements);
         }
-        docIndex.setFalsePositive(bloomFilter.getFalsePositiveProbability());
-
-        System.out.println(bloomFilter.getFalsePositiveProbability());
 
         int wordCnt = 0;
 
@@ -120,11 +117,11 @@ public class Chlh2Client {
             bloomFilter.add(((int) Math.random()) + LibConstants.EMPTY_STRING);
         }
 
+        docIndex.setFalsePositive(bloomFilter.getFalsePositiveProbability());
+
         docIndex.setWordCnt(wordCnt);
 
         docIndex.getBloomFilters().add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
-
-        System.out.println(bloomFilter.getFalsePositiveProbability());
 
         bloomFilter.clear();
 
