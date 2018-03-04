@@ -28,6 +28,12 @@ public class Chlh2Client {
     private int c;
     private int n;
     private int k;
+    private int bitSetSize;
+    private int expectedNumberOElements;
+    private double falsePositiveProbability;
+
+    private int mode;
+
     private IBase64 base64;
     private byte[] secretKey = null;
 
@@ -36,6 +42,21 @@ public class Chlh2Client {
         this.c = c;
         this.n = n;
         this.k = k;
+        this.mode = 1;
+    }
+
+    public Chlh2Client(IBase64 base64, int bitSetSize, int expectedNumberOElements) {
+        this.base64 = base64;
+        this.bitSetSize = bitSetSize;
+        this.expectedNumberOElements = expectedNumberOElements;
+        this.mode = 2;
+    }
+
+    public Chlh2Client(IBase64 base64, double falsePositiveProbability, int expectedNumberOfElements) {
+        this.base64 = base64;
+        this.falsePositiveProbability = falsePositiveProbability;
+        this.expectedNumberOElements = expectedNumberOfElements;
+        this.mode = 3;
     }
 
     public byte[] getSecretKey() {
@@ -67,8 +88,17 @@ public class Chlh2Client {
         Index docIndex = new Index();
         docIndex.setDocId(this.EncId(docId, byteCipher));
 
-        BloomFilter<String> bloomFilter = new BloomFilter(c, n, k);
+        BloomFilter<String> bloomFilter = null;
+        if (mode == 1) {
+            bloomFilter = new BloomFilter(c, n, k);
+        } else if (mode == 2) {
+            bloomFilter = new BloomFilter<>(bitSetSize, expectedNumberOElements);
+        } else if (mode == 3) {
+            bloomFilter = new BloomFilter<>(falsePositiveProbability, expectedNumberOElements);
+        }
         docIndex.setFalsePositive(bloomFilter.getFalsePositiveProbability());
+
+        System.out.println(bloomFilter.getFalsePositiveProbability());
 
         int wordCnt = 0;
 
@@ -93,6 +123,8 @@ public class Chlh2Client {
         docIndex.setWordCnt(wordCnt);
 
         docIndex.getBloomFilters().add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
+
+        System.out.println(bloomFilter.getFalsePositiveProbability());
 
         bloomFilter.clear();
 
