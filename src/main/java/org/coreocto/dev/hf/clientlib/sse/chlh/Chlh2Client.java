@@ -23,17 +23,19 @@ import java.util.List;
 public class Chlh2Client {
 
     public static final char WILDCARD_CHAR = '*';
-//    private static final int BITSET_SIZE = 512 * 2;
-//    private static final int EXPECTED_NUM_OF_ELEMENTS = 500 * 2;
-    private int bitsetSize = -1;
-    private int expectedNumOfElements = -1;
+    //    private static final int BITSET_SIZE = 512 * 2;
+    //    private static final int EXPECTED_NUM_OF_ELEMENTS = 500 * 2;
+    private int c;
+    private int n;
+    private int k;
     private IBase64 base64;
     private byte[] secretKey = null;
 
-    public Chlh2Client(IBase64 base64, int bitsetSize, int expectedNumOfElements) {
+    public Chlh2Client(IBase64 base64, int c, int n, int k) {
         this.base64 = base64;
-        this.bitsetSize = bitsetSize;
-        this.expectedNumOfElements = expectedNumOfElements;
+        this.c = c;
+        this.n = n;
+        this.k = k;
     }
 
     public byte[] getSecretKey() {
@@ -65,7 +67,8 @@ public class Chlh2Client {
         Index docIndex = new Index();
         docIndex.setDocId(this.EncId(docId, byteCipher));
 
-        BloomFilter<String> bloomFilter = new BloomFilter(bitsetSize, expectedNumOfElements);
+        BloomFilter<String> bloomFilter = new BloomFilter(c, n, k);
+        docIndex.setFalsePositive(bloomFilter.getFalsePositiveProbability());
 
         int wordCnt = 0;
 
@@ -83,7 +86,7 @@ public class Chlh2Client {
             wordCnt++;
         }
 
-        for (int j = 0; j < expectedNumOfElements - wordCnt; j++) {
+        for (int j = 0; j < n - wordCnt; j++) {
             bloomFilter.add(((int) Math.random()) + LibConstants.EMPTY_STRING);
         }
 
@@ -104,7 +107,7 @@ public class Chlh2Client {
             return out;
         }
 
-        BloomFilter<String> bloomFilter = new BloomFilter(bitsetSize, expectedNumOfElements);
+        BloomFilter<String> bloomFilter = new BloomFilter(c, n, k);
 
         int wLen = w.length();
 
