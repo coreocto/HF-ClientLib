@@ -39,21 +39,33 @@ public class Chlh2Client {
 
     public Chlh2Client(IBase64 base64, int c, int n, int k) {
         this.base64 = base64;
+        this.setMode1(c, n, k);
+    }
+
+    public Chlh2Client(IBase64 base64, int bitSetSize, int expectedNumberOElements) {
+        this.base64 = base64;
+        this.setMode2(bitSetSize, expectedNumberOElements);
+    }
+
+    public Chlh2Client(IBase64 base64, double falsePositiveProbability, int expectedNumberOfElements) {
+        this.base64 = base64;
+        this.setMode3(falsePositiveProbability, expectedNumberOfElements);
+    }
+
+    public void setMode1(int c, int n, int k) {
         this.c = c;
         this.n = n;
         this.k = k;
         this.mode = 1;
     }
 
-    public Chlh2Client(IBase64 base64, int bitSetSize, int expectedNumberOElements) {
-        this.base64 = base64;
+    public void setMode2(int bitSetSize, int expectedNumberOElements) {
         this.bitSetSize = bitSetSize;
         this.expectedNumberOElements = expectedNumberOElements;
         this.mode = 2;
     }
 
-    public Chlh2Client(IBase64 base64, double falsePositiveProbability, int expectedNumberOfElements) {
-        this.base64 = base64;
+    public void setMode3(double falsePositiveProbability, int expectedNumberOfElements) {
         this.falsePositiveProbability = falsePositiveProbability;
         this.expectedNumberOElements = expectedNumberOfElements;
         this.mode = 3;
