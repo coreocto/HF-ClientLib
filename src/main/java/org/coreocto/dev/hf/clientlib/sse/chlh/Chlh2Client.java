@@ -88,14 +88,7 @@ public class Chlh2Client {
         Index docIndex = new Index();
         docIndex.setDocId(this.EncId(docId, byteCipher));
 
-        BloomFilter<String> bloomFilter = null;
-        if (mode == 1) {
-            bloomFilter = new BloomFilter(c, n, k);
-        } else if (mode == 2) {
-            bloomFilter = new BloomFilter<>(bitSetSize, expectedNumberOElements);
-        } else if (mode == 3) {
-            bloomFilter = new BloomFilter<>(falsePositiveProbability, expectedNumberOElements);
-        }
+        BloomFilter<String> bloomFilter = getBloomFilter();
 
         int wordCnt = 0;
 
@@ -128,6 +121,18 @@ public class Chlh2Client {
         return docIndex;
     }
 
+    private BloomFilter<String> getBloomFilter() {
+        BloomFilter<String> tmp = null;
+        if (mode == 1) {
+            tmp = new BloomFilter(c, n, k);
+        } else if (mode == 2) {
+            tmp = new BloomFilter<>(bitSetSize, expectedNumberOElements);
+        } else if (mode == 3) {
+            tmp = new BloomFilter<>(falsePositiveProbability, expectedNumberOElements);
+        }
+        return tmp;
+    }
+
     public List<String> Trapdoor(String w) {
 
         List<String> out = new ArrayList<>();
@@ -136,7 +141,7 @@ public class Chlh2Client {
             return out;
         }
 
-        BloomFilter<String> bloomFilter = new BloomFilter(c, n, k);
+        BloomFilter<String> bloomFilter = getBloomFilter();
 
         int wLen = w.length();
 
