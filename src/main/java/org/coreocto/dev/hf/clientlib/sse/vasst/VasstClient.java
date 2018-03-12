@@ -1,6 +1,5 @@
 package org.coreocto.dev.hf.clientlib.sse.vasst;
 
-import ca.rmen.porterstemmer.PorterStemmer;
 import org.coreocto.dev.hf.clientlib.LibConstants;
 import org.coreocto.dev.hf.clientlib.crypto.DummyFcImpl;
 import org.coreocto.dev.hf.clientlib.parser.IFileParser;
@@ -19,8 +18,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-
-//import org.coreocto.dev.hf.commonlib.util.Registry;
 
 public class VasstClient {
 
@@ -99,9 +96,6 @@ public class VasstClient {
         //filter stop words
         removeStopWords(wordList);
 
-        //do stemming with PorterStemmer
-        doStemming(wordList);
-
         int wordListSize = wordList.size();
 
         // word list de-duplication & calculate term freq.
@@ -164,23 +158,9 @@ public class VasstClient {
             return;
         }
 
-        List<String> stopWords = getStopWords();//new ArrayList<>();
+        List<String> stopWords = getStopWords();
 
         wordList.remove(stopWords);
-    }
-
-    private void doStemming(List<String> wordList) {
-
-        if (wordList == null || wordList.isEmpty()) {
-            return;
-        }
-
-        int size = wordList.size();
-
-        PorterStemmer porterStemmer = new PorterStemmer();
-        for (int i = 0; i < size; i++) {
-            wordList.set(i, porterStemmer.stemWord(wordList.get(i)));
-        }
     }
 
     public List<String> CreateReq(String query, BigDecimal x, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeyException {
@@ -194,9 +174,6 @@ public class VasstClient {
 
         //filter stop words
         removeStopWords(keywords);
-
-        //do stemming with PorterStemmer
-        doStemming(keywords);
 
         //filter unique words with HashSet
         Set<String> uniqueKeywords = new HashSet<>();

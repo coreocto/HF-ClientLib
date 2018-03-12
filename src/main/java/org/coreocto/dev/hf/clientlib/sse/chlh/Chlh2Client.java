@@ -23,8 +23,8 @@ import java.util.List;
 public class Chlh2Client {
 
     public static final char WILDCARD_CHAR = '*';
-    //    private static final int BITSET_SIZE = 512 * 2;
-    //    private static final int EXPECTED_NUM_OF_ELEMENTS = 500 * 2;
+    //private static final int BITSET_SIZE = 512 * 2;
+    //private static final int EXPECTED_NUM_OF_ELEMENTS = 500 * 2;
     private int c;
     private int n;
     private int k;
