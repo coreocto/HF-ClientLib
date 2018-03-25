@@ -27,8 +27,17 @@ public class VasstClient {
     private boolean dataProtected = true;
     private IBase64 base64 = null;
 
+    private int M = -1;
+    private int random = -1;
+
     public VasstClient(IBase64 base64) {
         this.base64 = base64;
+    }
+
+    public VasstClient(IBase64 base64, int M, int random) {
+        this.base64 = base64;
+        this.M = M;
+        this.random = random;
     }
 
     //this is a method to cache stop word in memory, so that we don't have to load it over and over again.
@@ -117,7 +126,14 @@ public class VasstClient {
                 }
                 String firstRd = encryptStr(key, byteCipher);
                 String secondRd = encryptStrByCharPos(firstRd, x);
-                encTerms.put(secondRd, entry.getValue());
+
+                Integer freq = entry.getValue();
+
+                if (M > -1 && random > -1) {
+                    freq = (freq + random) % M;
+                }
+
+                encTerms.put(secondRd, freq);
             }
 
             terms.clear();
