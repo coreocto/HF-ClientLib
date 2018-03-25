@@ -26,18 +26,11 @@ public class VasstClient {
     private byte[] secretKey = null;
     private boolean dataProtected = true;
     private IBase64 base64 = null;
-
-    private int M = -1;
-    private int random = -1;
+    private int m = -1;
+    private int k = -1;
 
     public VasstClient(IBase64 base64) {
         this.base64 = base64;
-    }
-
-    public VasstClient(IBase64 base64, int M, int random) {
-        this.base64 = base64;
-        this.M = M;
-        this.random = random;
     }
 
     //this is a method to cache stop word in memory, so that we don't have to load it over and over again.
@@ -75,6 +68,22 @@ public class VasstClient {
             }
         }
         return stopWords;
+    }
+
+    public int getM() {
+        return m;
+    }
+
+    public void setM(int m) {
+        this.m = m;
+    }
+
+    public int getK() {
+        return k;
+    }
+
+    public void setK(int k) {
+        this.k = k;
     }
 
     public boolean isDataProtected() {
@@ -129,8 +138,8 @@ public class VasstClient {
 
                 Integer freq = entry.getValue();
 
-                if (M > -1 && random > -1) {
-                    freq = (freq + random) % M;
+                if (m > -1 && k > -1) {
+                    freq = (freq + k) % m;
                 }
 
                 encTerms.put(secondRd, freq);
