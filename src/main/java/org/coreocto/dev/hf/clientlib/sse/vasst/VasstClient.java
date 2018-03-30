@@ -133,8 +133,11 @@ public class VasstClient {
                 if (key == null) {
                     continue;
                 }
-                String firstRd = encryptStr(key, byteCipher);
-                String secondRd = encryptStrByCharPos(firstRd, x);
+                byte[] data = key.getBytes(LibConstants.CHARSET_UTF8);
+                data = this.encryptBytes(data, byteCipher);
+                String secondRd = this.encryptBytesByBytePos(data, x);
+//                String firstRd = encryptStr(key, byteCipher);
+//                String secondRd = encryptStrByCharPos(firstRd, x);
 
                 Integer freq = entry.getValue();
 
