@@ -172,9 +172,30 @@ public class VasstClient {
         }
     }
 
+    private String encryptBytesByBytePos(byte[] data, BigDecimal x){
+        if (data == null || data.length==0) {
+            return null;
+        } else {
+            int len = data.length;
+
+            BigDecimal sum = BigDecimal.ZERO;
+            for (int i = 0; i < len; i++) {
+                byte ascii = data[i];
+                BigDecimal partB = x.pow(len - i);
+                BigDecimal ascii_in_bd = BigDecimal.valueOf(ascii);
+                sum = sum.add(partB.multiply(ascii_in_bd));
+            }
+            return sum.toPlainString();
+        }
+    }
+
     private String encryptStr(String message, IByteCipher byteCipher) throws UnsupportedEncodingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         byte[] enc = byteCipher.encrypt(message.getBytes(LibConstants.ENCODING_UTF8));
         return base64.encodeToString(enc);
+    }
+
+    private byte[] encryptBytes(byte[] data, IByteCipher byteCipher) throws BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
+        return byteCipher.encrypt(data);
     }
 
     private void removeStopWords(List<String> wordList) throws IOException {
@@ -206,8 +227,11 @@ public class VasstClient {
 
         if (dataProtected) {
             for (String uniqueKeyword : uniqueKeywords) {
-                String firstRd = encryptStr(uniqueKeyword, byteCipher);
-                String secondRd = encryptStrByCharPos(firstRd, x);
+                byte[] data = uniqueKeyword.getBytes(LibConstants.CHARSET_UTF8);
+                data = this.encryptBytes(data, byteCipher);
+                String secondRd = this.encryptBytesByBytePos(data, x);
+                //String firstRd = encryptStr(uniqueKeyword, byteCipher);
+                //String secondRd = encryptStrByCharPos(firstRd, x);
                 result.add(secondRd);
             }
 
