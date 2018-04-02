@@ -26,8 +26,8 @@ public class VasstClient {
     private byte[] secretKey = null;
     private boolean dataProtected = true;
     private IBase64 base64 = null;
-    private int m = -1;
-    private int k = -1;
+//    private int m = -1;
+//    private int k = -1;
 
     public VasstClient(IBase64 base64) {
         this.base64 = base64;
@@ -70,21 +70,21 @@ public class VasstClient {
         return stopWords;
     }
 
-    public int getM() {
-        return m;
-    }
-
-    public void setM(int m) {
-        this.m = m;
-    }
-
-    public int getK() {
-        return k;
-    }
-
-    public void setK(int k) {
-        this.k = k;
-    }
+//    public int getM() {
+//        return m;
+//    }
+//
+//    public void setM(int m) {
+//        this.m = m;
+//    }
+//
+//    public int getK() {
+//        return k;
+//    }
+//
+//    public void setK(int k) {
+//        this.k = k;
+//    }
 
     public boolean isDataProtected() {
         return dataProtected;
@@ -141,9 +141,9 @@ public class VasstClient {
 
                 Integer freq = entry.getValue();
 
-                if (m > -1 && k > -1) {
-                    freq = (freq + k) % m;
-                }
+//                if (m > -1 && k > -1) {
+//                    freq = (freq + k) % m;
+//                }
 
                 encTerms.put(secondRd, freq);
             }
