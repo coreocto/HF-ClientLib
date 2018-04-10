@@ -18,6 +18,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Chlh2Client {
@@ -153,41 +154,46 @@ public class Chlh2Client {
             return out;
         }
 
-        BloomFilter<String> bloomFilter = getBloomFilter();
+        List<String> keywords = Arrays.asList(w.split(LibConstants.REGEX_SPACE));
 
-        int wLen = w.length();
+        for (String keyword : keywords) {
 
-        int leftMostPos = w.indexOf(WILDCARD_CHAR);
+            BloomFilter<String> bloomFilter = getBloomFilter();
 
-        if (leftMostPos != -1) {
-            //partial match
+            int wLen = keyword.length();
 
-            //handle one wildcard char
+            int leftMostPos = keyword.indexOf(WILDCARD_CHAR);
 
-            int rightMostPos = w.lastIndexOf(WILDCARD_CHAR);
+            if (leftMostPos != -1) {
+                //partial match
 
-            for (int i = 0; i < leftMostPos; i++) {
-                char c = w.charAt(i);
-                bloomFilter.add(c + LibConstants.EMPTY_STRING + i);
-                bloomFilter.add(c + LibConstants.EMPTY_STRING + 0);
+                //handle one wildcard char
+
+                int rightMostPos = w.lastIndexOf(WILDCARD_CHAR);
+
+                for (int i = 0; i < leftMostPos; i++) {
+                    char c = w.charAt(i);
+                    bloomFilter.add(c + LibConstants.EMPTY_STRING + i);
+                    bloomFilter.add(c + LibConstants.EMPTY_STRING + 0);
+                }
+
+                for (int i = wLen - 1; i > rightMostPos; i--) {
+                    char c = w.charAt(i);
+                    bloomFilter.add(c + LibConstants.EMPTY_STRING + (i + 1 - wLen));
+                    bloomFilter.add(c + LibConstants.EMPTY_STRING + 0);
+                }
+
+            } else {
+                //exact match
+
+                for (int i = 0; i < wLen; i++) {
+                    bloomFilter.add(w.charAt(i) + LibConstants.EMPTY_STRING + i);
+                }
             }
 
-            for (int i = wLen - 1; i > rightMostPos; i--) {
-                char c = w.charAt(i);
-                bloomFilter.add(c + LibConstants.EMPTY_STRING + (i + 1 - wLen));
-                bloomFilter.add(c + LibConstants.EMPTY_STRING + 0);
-            }
-
-        } else {
-            //exact match
-
-            for (int i = 0; i < wLen; i++) {
-                bloomFilter.add(w.charAt(i) + LibConstants.EMPTY_STRING + i);
-            }
+            out.add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
+            bloomFilter.clear();
         }
-
-        out.add(base64.encodeToString(bloomFilter.getBitSet().toByteArray()));
-        bloomFilter.clear();
 
         return out;
     }

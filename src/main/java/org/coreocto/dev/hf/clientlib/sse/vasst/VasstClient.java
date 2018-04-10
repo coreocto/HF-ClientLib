@@ -108,18 +108,61 @@ public class VasstClient {
         this.secretKey = randomBytes;
     }
 
-    public TermFreq Preprocessing(InputStream inputStream, BigDecimal x, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeyException {
+    public TermFreq Preprocessing(InputStream inputStream, BigDecimal x, boolean includePrefix, boolean includeSuffix, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeyException {
         List<String> wordList = fileParser.getText(new BufferedInputStream(inputStream));
 
         //filter stop words
         removeStopWords(wordList);
 
-        int wordListSize = wordList.size();
+        //de-duplicate
+        Set<String> uniqueWordSet = new HashSet<>(wordList);
+
+        wordList.clear();
+
+        List<String> uniqueWordList = new ArrayList<>(uniqueWordSet);
+
+        uniqueWordSet.clear(); //added to minimize memory usage
+
+        if (includePrefix && includeSuffix) {
+            Set<String> s = new HashSet<>();
+            for (String uniqueWord : uniqueWordList) {
+                List<String> substrings = Util.getSubstrings(uniqueWord, true);
+                s.addAll(substrings);
+            }
+
+            uniqueWordList.clear();
+            uniqueWordList.addAll(s);
+            s.clear(); //added to minimize memory usage
+        } else if (includePrefix) {
+            Set<String> s = new HashSet<>();
+            for (String uniqueWord : uniqueWordList) {
+                int wordLen = uniqueWord.length();
+                for (int i = 1; i <= wordLen; i++) {
+                    s.add(uniqueWord.substring(0, i));
+                }
+            }
+            uniqueWordList.clear();
+            uniqueWordList.addAll(s);
+            s.clear(); //added to minimize memory usage
+        } else if (includeSuffix) {
+            Set<String> s = new HashSet<>();
+            for (String uniqueWord : uniqueWordList) {
+                int wordLen = uniqueWord.length();
+                for (int i = 0; i < wordLen; i++) {
+                    s.add(uniqueWord.substring(i, wordLen));
+                }
+            }
+            uniqueWordList.clear();
+            uniqueWordList.addAll(s);
+            s.clear(); //added to minimize memory usage
+        }
+
+        int wordListSize = uniqueWordList.size();
 
         // word list de-duplication & calculate term freq.
         TermFreq termFreq = new TermFreq();
         for (int i = 0; i < wordListSize; i++) {
-            termFreq.inc(wordList.get(i));
+            termFreq.inc(uniqueWordList.get(i));
         }
 
         // encrypt each term
@@ -154,8 +197,8 @@ public class VasstClient {
         return termFreq;
     }
 
-    public TermFreq Preprocessing(File inFile, BigDecimal x, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
-        return this.Preprocessing(new FileInputStream(inFile), x, fileParser, byteCipher);
+    public TermFreq Preprocessing(File inFile, BigDecimal x, boolean includePrefix, boolean includeSuffix, IFileParser fileParser, IByteCipher byteCipher) throws IOException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, InvalidAlgorithmParameterException {
+        return this.Preprocessing(new FileInputStream(inFile), x, includePrefix, includeSuffix, fileParser, byteCipher);
     }
 
     private String encryptStrByCharPos(String message, BigDecimal x) {
