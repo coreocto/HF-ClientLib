@@ -104,6 +104,8 @@ public class SuiseClient {
 
         List<String> uniqueWordList = new ArrayList<>(uniqueWordSet);
 
+        uniqueWordSet.clear();
+
         if (includePrefix && includeSuffix) {
             Set<String> s = new HashSet<>();
             for (String uniqueWord : uniqueWordList) {

@@ -115,7 +115,8 @@ public class VasstClient {
         removeStopWords(wordList);
 
         //de-duplicate
-        Set<String> uniqueWordSet = new HashSet<>(wordList);
+        Set<String> uniqueWordSet = new HashSet<>();
+        uniqueWordSet.addAll(wordList);
 
         wordList.clear();
 
