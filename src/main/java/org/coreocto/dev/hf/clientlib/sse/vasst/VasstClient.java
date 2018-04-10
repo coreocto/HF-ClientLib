@@ -114,56 +114,38 @@ public class VasstClient {
         //filter stop words
         removeStopWords(wordList);
 
-        //de-duplicate
-        Set<String> uniqueWordSet = new HashSet<>();
-        uniqueWordSet.addAll(wordList);
-
-        wordList.clear();
-
-        List<String> uniqueWordList = new ArrayList<>(uniqueWordSet);
-
-        uniqueWordSet.clear(); //added to minimize memory usage
-
-        if (includePrefix && includeSuffix) {
-            Set<String> s = new HashSet<>();
-            for (String uniqueWord : uniqueWordList) {
-                List<String> substrings = Util.getSubstrings(uniqueWord, true);
-                s.addAll(substrings);
-            }
-
-            uniqueWordList.clear();
-            uniqueWordList.addAll(s);
-            s.clear(); //added to minimize memory usage
-        } else if (includePrefix) {
-            Set<String> s = new HashSet<>();
-            for (String uniqueWord : uniqueWordList) {
-                int wordLen = uniqueWord.length();
-                for (int i = 1; i <= wordLen; i++) {
-                    s.add(uniqueWord.substring(0, i));
+        {
+            List<String> tmp = new ArrayList<>();
+            if (includePrefix && includeSuffix) {
+                for (String word : wordList) {
+                    List<String> substrings = Util.getSubstrings(word, false);
+                    tmp.addAll(substrings);
+                }
+            } else if (includePrefix) {
+                for (String word : wordList) {
+                    int wordLen = word.length();
+                    for (int i = 1; i <= wordLen; i++) {
+                        tmp.add(word.substring(0, i));
+                    }
+                }
+            } else if (includeSuffix) {
+                for (String word : wordList) {
+                    int wordLen = word.length();
+                    for (int i = 0; i < wordLen; i++) {
+                        tmp.add(word.substring(i, wordLen));
+                    }
                 }
             }
-            uniqueWordList.clear();
-            uniqueWordList.addAll(s);
-            s.clear(); //added to minimize memory usage
-        } else if (includeSuffix) {
-            Set<String> s = new HashSet<>();
-            for (String uniqueWord : uniqueWordList) {
-                int wordLen = uniqueWord.length();
-                for (int i = 0; i < wordLen; i++) {
-                    s.add(uniqueWord.substring(i, wordLen));
-                }
-            }
-            uniqueWordList.clear();
-            uniqueWordList.addAll(s);
-            s.clear(); //added to minimize memory usage
+            wordList.clear();
+            wordList = tmp;
         }
 
-        int wordListSize = uniqueWordList.size();
+        int wordListSize = wordList.size();
 
         // word list de-duplication & calculate term freq.
         TermFreq termFreq = new TermFreq();
         for (int i = 0; i < wordListSize; i++) {
-            termFreq.inc(uniqueWordList.get(i));
+            termFreq.inc(wordList.get(i));
         }
 
         // encrypt each term
