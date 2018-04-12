@@ -135,6 +135,8 @@ public class VasstClient {
                         tmp.add(word.substring(i, wordLen));
                     }
                 }
+            } else {
+                tmp.addAll(wordList);
             }
             wordList.clear();
             wordList = tmp;
@@ -201,8 +203,8 @@ public class VasstClient {
         }
     }
 
-    private String encryptBytesByBytePos(byte[] data, BigDecimal x){
-        if (data == null || data.length==0) {
+    private String encryptBytesByBytePos(byte[] data, BigDecimal x) {
+        if (data == null || data.length == 0) {
             return null;
         } else {
             int len = data.length;
